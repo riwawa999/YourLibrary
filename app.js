@@ -765,6 +765,43 @@ function renderList() {
   if (filteredItems.length === 0) {
     DOM.emptyState.style.display = 'flex';
     DOM.itemsGrid.style.display = 'none';
+    
+    const categoryItems = state.items.filter(item => item.type === activeCategory);
+    if (categoryItems.length === 0) {
+      // Entirely empty category
+      DOM.emptyState.innerHTML = `
+        <div class="empty-icon">
+          <i class="fa-regular fa-folder-open"></i>
+        </div>
+        <h3>Your collection is empty</h3>
+        <p>Add your first item to start curating this list!</p>
+        <button id="empty-add-btn" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> <span>Add First Item</span>
+        </button>
+      `;
+      document.getElementById('empty-add-btn').addEventListener('click', () => openModal());
+    } else {
+      // Filtered out empty state
+      DOM.emptyState.innerHTML = `
+        <div class="empty-icon">
+          <i class="fa-solid fa-filter"></i>
+        </div>
+        <h3>No matching results</h3>
+        <p>No items match your active search query or filters.</p>
+        <button id="reset-filters-btn" class="btn btn-secondary" style="margin-top: 1rem;">
+          <i class="fa-solid fa-rotate-left"></i> Reset Filters
+        </button>
+      `;
+      document.getElementById('reset-filters-btn').addEventListener('click', () => {
+        state.filters.search = '';
+        state.filters.status = 'all';
+        state.filters.language = 'all';
+        if (DOM.searchInput) DOM.searchInput.value = '';
+        if (DOM.statusFilter) DOM.statusFilter.value = 'all';
+        if (DOM.languageFilter) DOM.languageFilter.value = 'all';
+        renderList();
+      });
+    }
   } else {
     DOM.emptyState.style.display = 'none';
     DOM.itemsGrid.style.display = 'grid';
@@ -1057,6 +1094,11 @@ function showToast(message, type = 'success') {
 // ==========================================================================
 function populateLanguageSelect(selectedVal = null) {
   DOM.formLanguage.innerHTML = '';
+
+  if (state.languages.length === 0) {
+    state.languages = ["Japanese", "English", "Korean", "Chinese"];
+    saveLanguages();
+  }
 
   state.languages.forEach(lang => {
     const opt = document.createElement('option');
