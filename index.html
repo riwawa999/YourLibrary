@@ -74,15 +74,39 @@
       
       <!-- 1. DASHBOARD VIEW -->
       <div id="view-dashboard" class="view-container">
-        <section class="welcome-banner">
-          <h2>Welcome to YourLibrary</h2>
-          <p>This is a high-level summary of your logs. Use the top-left menu to navigate to individual pages or add new items.</p>
-        </section>
+        <div class="dashboard-top-layout">
+          <div class="dashboard-top-left">
+            <section class="welcome-banner">
+              <h2>Welcome to YourLibrary</h2>
+              <p>This is a high-level summary of your logs. Use the top-left menu to navigate to individual pages or add new items.</p>
+            </section>
 
-        <!-- Stats Section -->
-        <section class="stats-section" id="stats-section" aria-label="Dashboard Statistics">
-          <!-- Populated dynamically via JS -->
-        </section>
+            <!-- Stats Section -->
+            <section class="stats-section" id="stats-section" aria-label="Dashboard Statistics">
+              <!-- Populated dynamically via JS -->
+            </section>
+          </div>
+
+          <!-- Pie Chart Section -->
+          <div class="dashboard-top-right">
+            <div class="analytics-card pie-chart-card">
+              <h4><i class="fa-solid fa-chart-pie"></i> Category Distribution</h4>
+              <div class="pie-chart-wrapper">
+                <div class="pie-chart-container">
+                  <div class="donut-chart" id="dashboard-donut-chart">
+                    <div class="donut-center">
+                      <span class="donut-total" id="donut-total-count">0</span>
+                      <span class="donut-label">Items</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="pie-chart-legend" id="dashboard-pie-legend">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Analytics & Insights Section -->
         <section class="analytics-section" aria-label="Topic Analytics">

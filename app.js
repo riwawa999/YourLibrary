@@ -488,6 +488,64 @@ function renderDashboard() {
   planningCard.addEventListener('click', () => openModal(null, 'planning'));
   DOM.statsSection.appendChild(planningCard);
 
+  // 4.5 Donut Chart Category Distribution
+  const donutChart = document.getElementById('dashboard-donut-chart');
+  const donutTotal = document.getElementById('donut-total-count');
+  const pieLegend = document.getElementById('dashboard-pie-legend');
+
+  if (donutChart && donutTotal && pieLegend) {
+    pieLegend.innerHTML = '';
+    donutTotal.textContent = total;
+
+    if (total === 0) {
+      donutChart.style.background = `conic-gradient(var(--border-color) 0% 100%)`;
+      state.categories.forEach((category, idx) => {
+        const catColor = `hsl(${(idx * 95) % 360}, 85%, 60%)`;
+        const legendItem = document.createElement('div');
+        legendItem.className = 'legend-item';
+        legendItem.innerHTML = `
+          <span class="legend-dot" style="background-color: ${catColor};"></span>
+          <div class="legend-info">
+            <span class="legend-name">${escapeHtml(category)}</span>
+            <span class="legend-value">0 (0%)</span>
+          </div>
+        `;
+        legendItem.addEventListener('click', () => navigate(category));
+        pieLegend.appendChild(legendItem);
+      });
+    } else {
+      let conicParts = [];
+      let accumulatedPercent = 0;
+
+      state.categories.forEach((category, idx) => {
+        const catItems = state.items.filter(i => i.type === category);
+        const catCount = catItems.length;
+        const pct = (catCount / total) * 100;
+        const catColor = `hsl(${(idx * 95) % 360}, 85%, 60%)`;
+
+        if (pct > 0) {
+          conicParts.push(`${catColor} ${accumulatedPercent}% ${(accumulatedPercent + pct)}%`);
+          accumulatedPercent += pct;
+        }
+
+        // Render legend item
+        const legendItem = document.createElement('div');
+        legendItem.className = 'legend-item';
+        legendItem.innerHTML = `
+          <span class="legend-dot" style="background-color: ${catColor};"></span>
+          <div class="legend-info">
+            <span class="legend-name">${escapeHtml(category)}</span>
+            <span class="legend-value">${catCount} (${pct.toFixed(0)}%)</span>
+          </div>
+        `;
+        legendItem.addEventListener('click', () => navigate(category));
+        pieLegend.appendChild(legendItem);
+      });
+
+      donutChart.style.background = `conic-gradient(${conicParts.join(', ')})`;
+    }
+  }
+
   // 5. Topic Analytics Cards
   if (DOM.analyticsGrid) {
     // Card A: Topic Distribution & Progress Breakdown
