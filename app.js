@@ -182,6 +182,14 @@ function loadData() {
           else if (item.title === 'The Three-Body Problem') item.language = 'Chinese';
           else item.language = 'English';
         }
+        // Migrate mock-3 status to completed
+        if (item.id === 'mock-3' && item.status === 'planning') {
+          item.status = 'completed';
+          item.rating = 5;
+          item.startDate = '2026-06-10';
+          item.endDate = '2026-06-20';
+          item.notes = 'An absolutely mind-bending sci-fi masterpiece. The scope of the story is huge, combining hard physics with deep sociological questions. Highly recommended.';
+        }
         return item;
       });
 
@@ -194,6 +202,7 @@ function loadData() {
           state.languages.push(item.language);
         }
       });
+      saveItems();
       saveCategories();
       saveLanguages();
     } catch (e) {
@@ -748,20 +757,15 @@ function createCard(item) {
   const typeBadgeText = item.type || 'Unassigned';
   const hasTypeClass = item.type ? 'badge-type-custom' : 'badge-type-unassigned';
   
-  let statusBadgeText = '';
   const lowerType = (item.type || '').toLowerCase();
   const isVideo = lowerType.includes('drama') || lowerType.includes('anime') || lowerType.includes('movie') || lowerType.includes('show');
 
-  switch (item.status) {
-    case 'planning':
-      statusBadgeText = isVideo ? 'Plan to Watch' : 'Plan to Read';
-      break;
-    case 'reading':
-      statusBadgeText = isVideo ? 'Watching' : 'Reading';
-      break;
-    case 'completed':
-      statusBadgeText = 'Completed';
-      break;
+  let statusBadgeHtml = '';
+  if (item.status === 'planning') {
+    const planningText = isVideo ? 'Plan to Watch' : 'Plan to Read';
+    statusBadgeHtml = `<span class="badge badge-status planning">${planningText}</span>`;
+  } else if (item.status === 'reading') {
+    statusBadgeHtml = `<span class="badge badge-status reading">In Progress</span>`;
   }
   
   // Cover Art
@@ -820,7 +824,7 @@ function createCard(item) {
       <div class="card-badge-container">
         <span class="badge ${hasTypeClass}" style="${typeBadgeStyle}">${escapeHtml(typeBadgeText)}</span>
         <span class="badge badge-language">${escapeHtml(item.language || 'English')}</span>
-        <span class="badge badge-status ${item.status}">${statusBadgeText}</span>
+        ${statusBadgeHtml}
       </div>
     </div>
     <div class="card-body">
@@ -1284,12 +1288,12 @@ function getMockItems() {
       type: 'Books',
       creator: 'Cixin Liu',
       language: 'Chinese',
-      status: 'planning',
-      rating: 0,
+      status: 'completed',
+      rating: 5,
       coverUrl: '',
-      startDate: '',
-      endDate: '',
-      notes: 'Heard it is a masterpiece of sci-fi. Want to take my time and read it when I get a chance.',
+      startDate: '2026-06-10',
+      endDate: '2026-06-20',
+      notes: 'An absolutely mind-bending sci-fi masterpiece. The scope of the story is huge, combining hard physics with deep sociological questions. Highly recommended.',
       createdAt: new Date(Date.now() - 3600000 * 24 * 1).toISOString()
     }
   ];
