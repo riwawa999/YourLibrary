@@ -502,6 +502,7 @@ function renderLibraryPage(categoryName) {
   // Total in category card
   const catTotalCard = document.createElement('div');
   catTotalCard.className = 'stat-card';
+  catTotalCard.setAttribute('data-status-filter', 'all');
   const grad = getCategoryGradient(categoryName);
   catTotalCard.innerHTML = `
     <div class="stat-icon" style="background-color: rgba(236, 72, 153, 0.08); color: ${grad[0]};">
@@ -516,7 +517,6 @@ function renderLibraryPage(categoryName) {
     state.filters.status = 'all';
     if (DOM.statusFilter) DOM.statusFilter.value = 'all';
     renderList();
-    openModal(null);
   });
   DOM.categoryStatsSection.appendChild(catTotalCard);
 
@@ -524,6 +524,7 @@ function renderLibraryPage(categoryName) {
   const completedCount = categoryItems.filter(i => i.status === 'completed').length;
   const completedCard = document.createElement('div');
   completedCard.className = 'stat-card';
+  completedCard.setAttribute('data-status-filter', 'completed');
   completedCard.innerHTML = `
     <div class="stat-icon icon-violet" style="color: var(--color-green); background-color: rgba(16, 185, 129, 0.12);">
       <i class="fa-solid fa-circle-check"></i>
@@ -537,7 +538,6 @@ function renderLibraryPage(categoryName) {
     state.filters.status = 'completed';
     if (DOM.statusFilter) DOM.statusFilter.value = 'completed';
     renderList();
-    openModal(null, 'completed');
   });
   DOM.categoryStatsSection.appendChild(completedCard);
 
@@ -545,6 +545,7 @@ function renderLibraryPage(categoryName) {
   const progressCount = categoryItems.filter(i => i.status === 'reading').length;
   const progressCard = document.createElement('div');
   progressCard.className = 'stat-card';
+  progressCard.setAttribute('data-status-filter', 'reading');
   progressCard.innerHTML = `
     <div class="stat-icon icon-blue">
       <i class="fa-solid fa-spinner"></i>
@@ -558,7 +559,6 @@ function renderLibraryPage(categoryName) {
     state.filters.status = 'reading';
     if (DOM.statusFilter) DOM.statusFilter.value = 'reading';
     renderList();
-    openModal(null, 'reading');
   });
   DOM.categoryStatsSection.appendChild(progressCard);
 
@@ -567,6 +567,7 @@ function renderLibraryPage(categoryName) {
 
   const catPlanningCard = document.createElement('div');
   catPlanningCard.className = 'stat-card';
+  catPlanningCard.setAttribute('data-status-filter', 'planning');
   catPlanningCard.innerHTML = `
     <div class="stat-icon icon-amber">
       <i class="fa-solid fa-bookmark"></i>
@@ -580,7 +581,6 @@ function renderLibraryPage(categoryName) {
     state.filters.status = 'planning';
     if (DOM.statusFilter) DOM.statusFilter.value = 'planning';
     renderList();
-    openModal(null, 'planning');
   });
   DOM.categoryStatsSection.appendChild(catPlanningCard);
 
@@ -715,6 +715,9 @@ function populateLanguageFilter() {
 function renderList() {
   if (state.currentView === 'dashboard' || state.currentView === 'settings') return;
 
+  // Sync active stats card highlight
+  updateActiveStatsCard();
+
   const activeCategory = state.currentView;
 
   // Filter items matching active category + search query + status + language filters
@@ -816,6 +819,21 @@ function renderList() {
       DOM.itemsGrid.appendChild(createCard(item));
     });
   }
+}
+
+function updateActiveStatsCard() {
+  if (!DOM.categoryStatsSection) return;
+  const cards = DOM.categoryStatsSection.querySelectorAll('.stat-card');
+  cards.forEach(card => {
+    const status = card.getAttribute('data-status-filter');
+    if (status) {
+      if (status === state.filters.status) {
+        card.classList.add('active');
+      } else {
+        card.classList.remove('active');
+      }
+    }
+  });
 }
 
 function createCard(item) {

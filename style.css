@@ -286,6 +286,17 @@ body.light-theme .ambient-glow {
   border-color: rgba(255, 255, 255, 0.15);
 }
 
+.stat-card.active {
+  border-color: var(--color-rose);
+  background-color: var(--bg-secondary);
+  box-shadow: 0 0 15px var(--color-rose-glow);
+}
+
+body.dark-theme .stat-card.active {
+  border-color: var(--color-violet);
+  box-shadow: 0 0 15px var(--color-violet-glow);
+}
+
 .stat-icon {
   width: 3.25rem;
   height: 3.25rem;
