@@ -107,20 +107,23 @@ document.addEventListener('DOMContentLoaded', () => {
 // THEME MANAGEMENT
 // ==========================================================================
 function applyTheme() {
-  document.body.className = state.theme;
-  const icon = DOM.themeToggleBtn.querySelector('i');
-  if (state.theme === 'light-theme') {
-    icon.className = 'fa-solid fa-moon';
-  } else {
-    icon.className = 'fa-solid fa-sun';
+  // Permanently set to light-theme (Pinkwhite)
+  state.theme = 'light-theme';
+  document.body.className = 'light-theme';
+  
+  if (DOM.themeToggleBtn) {
+    const icon = DOM.themeToggleBtn.querySelector('i');
+    if (icon) {
+      icon.className = 'fa-solid fa-moon';
+    }
   }
 }
 
 function toggleTheme() {
-  state.theme = state.theme === 'dark-theme' ? 'light-theme' : 'dark-theme';
-  localStorage.setItem('yl_theme', state.theme);
+  // Theme is locked to Pinkwhite (light-theme)
+  state.theme = 'light-theme';
+  localStorage.setItem('yl_theme', 'light-theme');
   applyTheme();
-  showToast('Theme switched successfully', 'info');
 }
 
 // ==========================================================================
@@ -141,11 +144,9 @@ function toggleSidebar(open = true) {
 // DATA PERSISTENCE & MIGRATION
 // ==========================================================================
 function loadData() {
-  // Load Theme
-  const savedTheme = localStorage.getItem('yl_theme');
-  if (savedTheme) {
-    state.theme = savedTheme;
-  }
+  // Enforce Light Theme (Pinkwhite)
+  state.theme = 'light-theme';
+  localStorage.setItem('yl_theme', 'light-theme');
 
   // Load Categories
   const savedCategories = localStorage.getItem('yl_categories');
@@ -287,7 +288,9 @@ function navigate(view) {
 // ==========================================================================
 function setupEventListeners() {
   // Sidebar Toggles
-  DOM.themeToggleBtn.addEventListener('click', toggleTheme);
+  if (DOM.themeToggleBtn) {
+    DOM.themeToggleBtn.addEventListener('click', toggleTheme);
+  }
   DOM.menuToggleBtn.addEventListener('click', () => toggleSidebar(true));
   DOM.sidebarCloseBtn.addEventListener('click', () => toggleSidebar(false));
   DOM.sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
