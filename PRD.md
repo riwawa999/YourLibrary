@@ -1,113 +1,113 @@
 # Product Requirement Document (PRD) - YourLibrary
 
-## 1. 製品概要 (Product Overview)
-**YourLibrary** は、ユーザー自身が読んだ本や視聴したドラマのログを美しく、プライベートに記録・管理できるシングルページのWebアプリケーションです。
-外部のデータベースやサーバーを必要とせず、ブラウザの `LocalStorage` のみを用いて動作するため、プライバシーが完全に保護された高速なログツールを提供します。
+## 1. Product Overview
+**YourLibrary** is a premium, modern single-page web application designed for users to log, track, and review the books they read and the dramas they watch. 
+Operating entirely on the client side using the browser's `LocalStorage` API, the application requires no external database or server setup, providing a private, secure, and fast environment to maintain media history.
 
-### 1.1 背景と目的
-- 「読んだ本や見たドラマを簡単かつ美しく記録しておきたい」という個人のニーズ。
-- 既存のSNS型記録サービスのような他者との繋がりを排除し、**自分だけの書斎・シアタールーム**のような感覚でパーソナルな体験を提供すること。
-- 手軽にバックアップ（インポート/エクスポート）ができ、動作が軽量であること。
-
----
-
-## 2. ターゲットユーザーと提供価値
-### 2.1 ターゲットユーザー
-- 読書やドラマ視聴（アニメ・映画含む）が趣味の方。
-- 既存サービスの複雑なUIや他人のレビュー表示に疲れた方。
-- データのポータビリティ（自分でのバックアップ管理）を重視する方。
-
-### 2.2 提供価値
-- **自己完結性**: 登録不要、データはすべてローカル（ブラウザ）に保存。
-- **美しいデザイン**: モダングラフィックス、グラスモーフィズムを用いた、愛着の湧く高級感のあるダークUI。
-- **データ所有権**: いつでもJSON形式でエクスポートでき、別のブラウザや端末に丸ごと移行可能。
+### 1.1 Background & Objectives
+- Address the personal need to log reading and watching history in a unified, visually pleasing space.
+- Eliminate social media overhead (likes, comments, external reviews) found in existing platforms, creating an intimate "personal study" or "private theater" feel.
+- Ensure ease of data portability via straightforward JSON backup utilities.
 
 ---
 
-## 3. 機能要件 (Feature Requirements)
+## 2. Target Audience & Core Value
 
-### 3.1 ダッシュボード (Dashboard & Stats)
-- **総コンテンツ数**: 登録されているすべてのアイテム数を表示。
-- **読んだ本**: カテゴリが「本」かつ完了済みのアイテム数、または本全体の登録数を表示。
-- **見たドラマ**: カテゴリが「ドラマ」かつ完了済みのアイテム数、またはドラマ全体の登録数を表示。
-- **平均評価**: 登録された評価（星1〜5）の平均値をリアルタイムに算出して表示（未評価は除外）。
+### 2.1 Target Audience
+- Avid readers and drama/TV series enthusiasts.
+- Users seeking a clean, focused, ad-free environment without public social interactions.
+- Tech-savvy hobbyists who value data ownership and local backups.
 
-### 3.2 検索・フィルター・並び替え (Search & Filter Controls)
-- **リアルタイム検索**: タイトル、または著者/監督名で、入力と同時にアイテムを部分一致検索。
-- **カテゴリフィルター**: 「すべて」「本」「ドラマ」のタブ切り替え。
-- **ステータスフィルター**: 「すべて」「読みたい/観たい」「進行中」「完了」のプルダウン選択。
-- **並び替え**:
-  - 追加日が新しい順 / 古い順
-  - 評価の高い順 / 低い順 (未評価は最下部に表示)
-  - タイトル順 (50音順 / アルファベット順)
-
-### 3.3 コンテンツの登録・編集 (CRUD Operations)
-- **新規追加モーダル**:
-  - タイトル（必須）
-  - カテゴリ（本 / ドラマ）（必須）
-  - 著作者（著者名 / 監督・制作）（必須、カテゴリによってラベルが動的変化）
-  - ステータス（読みたい/観たい、進行中、完了）（必須）
-  - 評価（星1〜5の選択）
-  - カバー画像URL（任意。未入力時はカテゴリ別の美麗なグラデーションプレースホルダーを表示）
-  - 開始日・完了日（任意、日付選択カレンダー）
-  - メモ / レビュー（任意、複数行テキスト）
-- **編集・削除**:
-  - 既存カードをクリックして編集モーダルを開く。
-  - データの修正・保存、または削除が可能。削除時は確認ダイアログを表示。
-
-### 3.4 データポータビリティ (Data Portability)
-- **エクスポート機能**:
-  - 登録データを整形されたJSONファイルとしてローカルにダウンロード。
-- **インポート機能**:
-  - JSONファイルを読み込み、既存のデータとマージ。
-  - インポート時にデータ形式の簡易バリデーション（必須項目のチェックなど）を実行。
-
-### 3.5 テーマ切り替え (Theme Toggle)
-- **ダークモード/ライトモード**:
-  - ワンクリックでテーマを切り替え。設定は `LocalStorage` に保存され次回アクセス時も維持。
+### 2.2 Core Value Proposition
+- **Self-Contained Privacy**: No accounts required; all user logs remain on the client browser.
+- **Rich Aesthetics**: Premium dark theme by default, featuring glassmorphism elements and ambient backdrop color glows.
+- **Zero Lock-In**: Instant JSON import/export functionality to prevent data loss.
 
 ---
 
-## 4. 非機能要件 (Non-Functional Requirements)
+## 3. Functional Requirements
 
-### 4.1 UI/UX & デザイン仕様
-- **高級感のあるデザイン**: defaultでダークモードを採用し、半透明のグラスモーフィズムデザイン（`backdrop-filter`）とネオンパープル/ピンクのアンビエントグラデーションを背景に配置。
-- **レスポンシブ対応**: スマートフォン（縦持ち・横持ち）、タブレット、PCのすべての画面サイズで完全に最適化されたグリッドレイアウト。
-- **インタラクション**: ボタンのホバー、カードのホバー（浮き上がり）、モーダルのフェードイン、トーストの出現時に滑らかなイージングアニメーション（Bouncy / Smooth）を適用。
+### 3.1 Dashboard & Analytics
+- **Total Library Items**: Display the cumulative number of logged records.
+- **Books Read**: Display the total count of items flagged as a "Book".
+- **Dramas Watched**: Display the total count of items flagged as a "Drama".
+- **Average Rating**: Real-time calculated average of user star ratings (1-5 scale) across all rated logs.
 
-### 4.2 技術構成 (Tech Stack)
-- **HTML5**: セマンティックなマークアップ。
-- **Vanilla CSS3**: アプリのすべてのスタイリング。カスタム変数、CSSグリッド、Flexboxを駆使。
-- **Vanilla JavaScript (ES6)**: 状態管理、DOM操作、ファイルハンドリング。
-- **外部依存ライブラリ**:
-  - Google Fonts (`Outfit` / `Noto Sans JP`)
-  - FontAwesome (アイコン表示用CDN)
+### 3.2 Search, Filters, and Sorting
+- **Real-Time Search**: Instantly query titles or creators (authors/directors) as the user types.
+- **Category Tabs**: Filter items instantly by "All", "Books", or "Dramas".
+- **Status Filter**: Dropdown menu to filter logs by reading/watching status: "All Statuses", "Plan to Read/Watch", "In Progress", or "Completed".
+- **Sort Selector**:
+  - Newest Added (default)
+  - Oldest Added
+  - Highest Rated
+  - Lowest Rated (with unrated items sorted to the bottom)
+  - Title (A-Z alphabetically)
+
+### 3.3 Log Management (CRUD Operations)
+- **Log Creation Modal**:
+  - Title (Required)
+  - Category (Book / Drama) (Required)
+  - Creator (Author / Director) (Required; label changes dynamically based on category selection)
+  - Status (Plan to, In Progress, Completed) (Required)
+  - Rating (1 to 5 Stars; custom interactive star selector)
+  - Cover Image URL (Optional; falls back to an elegant colored gradient matching the category)
+  - Start & End Dates (Optional; date selectors)
+  - Review / Personal Notes (Optional; multiline text area)
+- **Edit & Delete Action**:
+  - Clicking any item card opens the modal in edit mode with prepopulated values.
+  - Delete buttons include a confirmation prompt.
+
+### 3.4 Data Portability
+- **JSON Export**: Downloads the entire library state as a formatted JSON file.
+- **JSON Import**: Uploads a backup file and merges it into the local state.
+- **Validation**: Basic validation check ensures imported JSON conforms to the schema.
+
+### 3.5 Theme Customization
+- **Light/Dark Toggle**: Switch color systems dynamically. Preference is cached in local storage for subsequent visits.
 
 ---
 
-## 5. データ構造 (Data Schema)
+## 4. Non-Functional Requirements
 
-各アイテムは以下のJavaScriptオブジェクト形式で保存されます：
+### 4.1 UI/UX Design Tenets
+- **Premium Styling**: Glassmorphic elements (`backdrop-filter: blur`), dark glass inputs, and linear neon gradients (Indigo for Books, Pink/Rose for Dramas).
+- **Responsive Layout**: Fluid CSS Grid and Flexbox structures adapt seamlessly across mobile devices, tablets, and wide-screen desktops.
+- **Transitions & Micro-animations**: Hover states lift cards slightly, modals scale and fade smoothly, and toast notifications slide up from the bottom with spring physics.
+
+### 4.2 Tech Stack
+- **Structure**: Semantic HTML5.
+- **Styling**: Vanilla CSS3 using custom properties (variables) for theme management.
+- **Logic**: Vanilla ES6 JavaScript.
+- **Assets**: 
+  - Google Fonts (`Outfit` & `Noto Sans JP`)
+  - FontAwesome (v6.x icon system)
+
+---
+
+## 5. Data Schema
+
+Each library item is stored as a JavaScript object with the following TypeScript schema:
 
 ```typescript
 interface LibraryItem {
-  id: string;          // 一意のID (タイムスタンプ等の文字列)
-  title: string;       // タイトル
-  type: 'book' | 'drama'; // カテゴリ
-  creator: string;     // 著者または監督名
-  status: 'planning' | 'reading' | 'completed'; // ステータス
-  rating: number;      // 評価 (0 = 未評価, 1〜5)
-  coverUrl: string;    // カバー画像の外部URL (任意)
-  startDate: string;   // 開始日 (YYYY-MM-DD, 任意)
-  endDate: string;     // 完了日 (YYYY-MM-DD, 任意)
-  notes: string;       // 感想・メモ (任意)
-  createdAt: string;   // 登録日時 (ISO-8601フォーマット)
+  id: string;          // Unique ID (typically a millisecond timestamp)
+  title: string;       // Name of the book/drama
+  type: 'book' | 'drama'; // Category type
+  creator: string;     // Author or Director name
+  status: 'planning' | 'reading' | 'completed'; // Current status
+  rating: number;      // Star score (0 = unrated, 1-5 scale)
+  coverUrl: string;    // Image address (optional)
+  startDate: string;   // Date started (YYYY-MM-DD, optional)
+  endDate: string;     // Date completed (YYYY-MM-DD, optional)
+  notes: string;       // User review/notes (optional)
+  createdAt: string;   // Date/Time log was created (ISO-8601)
 }
 ```
 
 ---
 
-## 6. 今後のロードマップ (Future Scope)
-1. **外部API連携**: Google Books API や TMDB API と連携し、タイトル入力時にカバー画像や著者情報を自動補完する機能。
-2. **読書・視聴進捗の細分化**: ページ数やエピソード単位での進捗管理機能（例: 全10話中3話まで視聴完了）。
-3. **カスタムタグ機能**: ジャンルやお気に入りタグを設定し、さらに詳細なフィルタリングを可能にする。
+## 6. Future Roadmap
+1. **API Metadata Fetching**: Integrate with Google Books API and TMDB API to auto-fill cover art, creators, and descriptions.
+2. **Detailed Progress Logging**: Allow tracking pages read (e.g., page 150 of 400) or episodes watched (e.g., Ep 4 of 12).
+3. **Tags/Tags Manager**: Custom user-defined tags (e.g., "sci-fi", "thriller", "masterpiece") for more precise filtering.

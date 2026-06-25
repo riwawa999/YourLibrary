@@ -1,58 +1,62 @@
 # YourLibrary 📚📺
 
-YourLibrary は、読んだ本や見たドラマを美しく、プライベートに記録・管理できるシングルページのWebアプリケーションです。  
-外部サーバーを一切介さず、ブラウザの `LocalStorage` のみを用いて動作するため、プライバシーが完全に守られた高速なログ環境を提供します。
+YourLibrary is a premium, modern single-page web application to log, track, and review the books you read and the dramas you watch.  
+Operating entirely on the client side with the browser's `LocalStorage` API, the application requires no backend or external server, ensuring a completely private, fast, and secure media tracking experience.
 
-👉 **[Webサイトで今すぐ使う (GitHub Pages)](https://riwawawa.github.io/YourLibrary/)**
-
----
-
-## 🌟 特徴 (Features)
-
-- **洗練されたダークUI**: グラスモーフィズム（背景ぼかし）とネオンアンビエントカラーを採用した、高級感溢れるデザイン。
-- **ダッシュボード統計**: 総アイテム数、本・ドラマそれぞれのカウント、平均評価（星評価）をリアルタイムに集計して表示。
-- **インテリジェントフィルタ & ソート**: タイトルや著作者（著者・監督）でのリアルタイム検索、タブによるカテゴリ切り替え、完了ステータス別の絞り込み、多彩な並び替えに対応。
-- **リッチな登録モーダル**: 開始日・終了日の記録、星1〜5の直感的な評価UI、カバー画像の個別設定、メモ/レビュー機能を搭載。
-- **カバー画像プレースホルダー**: カバー画像URLを指定しない場合、本のイメージ（パープル）やドラマのイメージ（ピンク）の美しいグラデーションカバーが自動生成されます。
-- **バックアップ & リカバリ**: ライブラリのデータをワンクリックでJSONファイルにエクスポート可能。また、JSONファイルからいつでも一括インポートしてデータを復元・マージできます。
-- **完全ローカル保存**: 全データはブラウザに自動保存されます。アカウント登録も不要で、今日からすぐに使い始められます。
+👉 **[Launch Live Web App (GitHub Pages)](https://riwawawa.github.io/YourLibrary/)**
 
 ---
 
-## 🛠️ プロジェクト構造 (Project Structure)
+## 🌟 Key Features
+
+- **Sleek Dark Theme**: A premium default dark theme featuring glassmorphism design layouts, translucent input fields, and neon gradient details.
+- **Analytics Dashboard**: Tracks total logged items, book metrics, drama metrics, and live-calculated average ratings.
+- **Advanced Filtering & Sorting**: Real-time text search, type category tab switches (All/Books/Dramas), completion status filters, and multiple sorting models.
+- **Rich Log Modals**: Dynamic forms change depending on whether you record a book (Author) or drama (Director). Includes star ratings, cover art URLs, date ranges, and multiline review space.
+- **Gradient Covers**: Don't have a cover image URL? The app dynamically generates beautiful, colorful gradient backdrops with icons for each category.
+- **Data Portability**: Instantly download your full library as a formatted JSON file or import a previous backup to restore your logs.
+- **100% Client-Side**: No registration required. All data remains in your local browser sandbox.
+
+---
+
+## 🛠️ Project Structure
 
 ```text
 Library app/
-├── index.html       # アプリケーションの骨格・レイアウト・モーダル
-├── style.css        # カラーシステム（ライト/ダーク）、アニメーション、レスポンシブデザイン
-├── app.js           # 状態管理、LocalStorage連携、フィルタ・ソートロジック、インポート・エクスポート
-├── PRD.md           # 製品要求仕様書 (Product Requirement Document)
-└── README.md        # 本ドキュメント
+├── index.html       # Application markup and layouts
+├── style.css        # Theme variables, responsive layouts, and transitions
+├── app.js           # State manager, LocalStorage persistence, and filter/sort logic
+├── PRD.md           # Product Requirement Document (English)
+└── README.md        # This documentation file (English)
 ```
 
-詳細な製品仕様については、[PRD.md](./PRD.md) をご参照ください。
+For comprehensive technical specifications, please check the [PRD.md](./PRD.md).
 
 ---
 
-## 🚀 使い方 (How to Run)
+## 🚀 How to Run
 
-### ローカルでの実行方法
-特別なセットアップは不要です。プロジェクトのファイルをダウンロードし、`index.html` をブラウザで直接ダブルクリックして開くだけで動作します。
+### Run Locally
+No installation is required. Simply download the project files and open `index.html` in any web browser.
 
-または、ローカルサーバーを起動したい場合は、VS Codeの「Live Server」拡張機能などを使用するか、以下のコマンドを実行します：
+Alternatively, you can run a local server using Python:
 
 ```bash
-# Pythonがインストールされている場合
+# Start a local static server
 python3 -m http.server 8000
 ```
-その後、ブラウザで `http://localhost:8000` にアクセスしてください。
+Open `http://localhost:8000` in your browser.
 
-### GitHub Pagesへのデプロイ
-本リポジトリは GitHub Pages に対応しています。
-GitHubにプッシュした後、リポジトリの `Settings` > `Pages` からソースを `Deploy from a branch` に設定し、`main` ブランチの root `/` を指定するだけで自動的にオンライン公開されます。
+### Deploying to GitHub Pages
+This project is configured to run on GitHub Pages out of the box.  
+Once pushed to your GitHub repository:
+1. Go to **Settings** > **Pages** of your repository.
+2. Under **Build and deployment**, select `Deploy from a branch` as source.
+3. Select `main` branch and `/` root directory, and save.
+4. Your site will be published at your custom GitHub Pages URL.
 
 ---
 
-## 📄 ライセンス (License)
+## 📄 License
 
-このプロジェクトは MIT ライセンスの下でライセンスされています。詳細は [LICENSE](./LICENSE) を参照してください（またはご自由にお使いください）。
+Licensed under the MIT License. Free to use, adapt, and build upon.

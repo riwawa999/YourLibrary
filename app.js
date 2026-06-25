@@ -1,5 +1,5 @@
 /**
- * YourLibrary - Core Application Logic
+ * YourLibrary - Core Application Logic (English Version)
  * State management, LocalStorage, CRUD operations, Search, Sort, Filters, and Theme toggles.
  */
 
@@ -94,7 +94,7 @@ function toggleTheme() {
   state.theme = state.theme === 'dark-theme' ? 'light-theme' : 'dark-theme';
   localStorage.setItem('yl_theme', state.theme);
   applyTheme();
-  showToast('テーマを切り替えました', 'info');
+  showToast('Theme switched successfully', 'info');
 }
 
 // ==========================================================================
@@ -115,7 +115,7 @@ function loadData() {
     } catch (e) {
       console.error('Failed to parse items from local storage', e);
       state.items = [];
-      showToast('データの読み込みに失敗しました。リセットします。', 'error');
+      showToast('Failed to load library data. Resetting database.', 'error');
     }
   } else {
     // Insert mock data if empty for a warm welcome
@@ -196,7 +196,7 @@ function openModal(item = null) {
   
   if (item) {
     // Edit Mode
-    DOM.modalTitle.textContent = '記録を編集する';
+    DOM.modalTitle.textContent = 'Edit Record';
     DOM.formId.value = item.id;
     DOM.formTitle.value = item.title;
     DOM.formType.value = item.type;
@@ -216,7 +216,7 @@ function openModal(item = null) {
     DOM.formDeleteBtn.style.display = 'inline-flex';
   } else {
     // Add Mode
-    DOM.modalTitle.textContent = '新しく記録する';
+    DOM.modalTitle.textContent = 'Add to Library';
     DOM.formId.value = '';
     DOM.formDeleteBtn.style.display = 'none';
   }
@@ -234,11 +234,11 @@ function closeModal() {
 function updateCreatorLabel() {
   const type = DOM.formType.value;
   if (type === 'book') {
-    DOM.creatorLabel.innerHTML = '著者名 <span class="required">*</span>';
-    DOM.formCreator.placeholder = '例: 村上春樹、東野圭吾';
+    DOM.creatorLabel.innerHTML = 'Author <span class="required">*</span>';
+    DOM.formCreator.placeholder = 'e.g., Haruki Murakami, Agatha Christie';
   } else {
-    DOM.creatorLabel.innerHTML = '監督 / 制作 <span class="required">*</span>';
-    DOM.formCreator.placeholder = '例: デヴィッド・フィンチャー、ダファー兄弟';
+    DOM.creatorLabel.innerHTML = 'Director / Creator <span class="required">*</span>';
+    DOM.formCreator.placeholder = 'e.g., David Fincher, The Duffer Brothers';
   }
 }
 
@@ -264,7 +264,7 @@ function handleFormSubmit(e) {
 
   // Basic Validation
   if (!title || !creator) {
-    showToast('タイトルと著作者は入力必須です。', 'error');
+    showToast('Title and Creator fields are required.', 'error');
     return;
   }
   
@@ -284,7 +284,7 @@ function handleFormSubmit(e) {
         endDate,
         notes
       };
-      showToast('記録を更新しました！', 'success');
+      showToast('Record updated successfully!', 'success');
     }
   } else {
     // Add new item
@@ -302,7 +302,7 @@ function handleFormSubmit(e) {
       createdAt: new Date().toISOString()
     };
     state.items.unshift(newItem); // Add to the front
-    showToast('新しく記録を追加しました！', 'success');
+    showToast('Record added successfully!', 'success');
   }
   
   saveItems();
@@ -314,12 +314,12 @@ function handleDeleteItem() {
   const id = DOM.formId.value;
   if (!id) return;
   
-  if (confirm('この記録を削除してもよろしいですか？')) {
+  if (confirm('Are you sure you want to delete this record?')) {
     state.items = state.items.filter(item => item.id !== id);
     saveItems();
     closeModal();
     renderApp();
-    showToast('記録を削除しました。', 'info');
+    showToast('Record deleted.', 'info');
   }
 }
 
@@ -387,7 +387,7 @@ function renderList() {
         return a.rating - b.rating;
         
       case 'title':
-        return a.title.localeCompare(b.title, 'ja');
+        return a.title.localeCompare(b.title, 'en');
         
       case 'newest':
       default:
@@ -414,7 +414,7 @@ function renderList() {
 function createCard(item) {
   const card = document.createElement('article');
   card.className = 'card';
-  card.setAttribute('aria-label', `${item.type === 'book' ? '本' : 'ドラマ'}: ${item.title}`);
+  card.setAttribute('aria-label', `${item.type === 'book' ? 'Book' : 'Drama'}: ${item.title}`);
   card.addEventListener('click', () => openModal(item));
 
   // Determine Badge labels & Status class
@@ -424,20 +424,20 @@ function createCard(item) {
   let statusBadgeText = '';
   switch (item.status) {
     case 'planning':
-      statusBadgeText = item.type === 'book' ? '読みたい' : '観たい';
+      statusBadgeText = item.type === 'book' ? 'Plan to Read' : 'Plan to Watch';
       break;
     case 'reading':
-      statusBadgeText = item.type === 'book' ? '読書中' : '視聴中';
+      statusBadgeText = item.type === 'book' ? 'Reading' : 'Watching';
       break;
     case 'completed':
-      statusBadgeText = '完了';
+      statusBadgeText = 'Completed';
       break;
   }
   
   // Cover Render
   let coverHtml = '';
   if (item.coverUrl) {
-    coverHtml = `<img src="${escapeHtml(item.coverUrl)}" alt="${escapeHtml(item.title)}のカバー" loading="lazy">`;
+    coverHtml = `<img src="${escapeHtml(item.coverUrl)}" alt="${escapeHtml(item.title)} cover" loading="lazy">`;
   } else {
     const placeholderClass = item.type === 'book' ? 'placeholder-book' : 'placeholder-drama';
     const icon = item.type === 'book' ? 'fa-solid fa-book-open' : 'fa-solid fa-video';
@@ -460,15 +460,15 @@ function createCard(item) {
       }
     }
   } else {
-    starsHtml = '<span class="unrated-label">未評価</span>';
+    starsHtml = '<span class="unrated-label">Unrated</span>';
   }
 
   // Dates strings
   const startDateStr = item.startDate ? formatDate(item.startDate) : '--';
   const endDateStr = item.endDate ? formatDate(item.endDate) : '--';
   const datesHtml = item.status === 'planning' 
-    ? `<div class="card-dates"><span>追加: ${formatDate(item.createdAt || new Date().toISOString())}</span></div>`
-    : `<div class="card-dates"><span>開始: ${startDateStr}</span><span>完了: ${endDateStr}</span></div>`;
+    ? `<div class="card-dates"><span>Added: ${formatDate(item.createdAt || new Date().toISOString())}</span></div>`
+    : `<div class="card-dates"><span>Start: ${startDateStr}</span><span>End: ${endDateStr}</span></div>`;
 
   // Notes snippet
   const notesSnippet = item.notes 
@@ -500,7 +500,7 @@ function createCard(item) {
 // ==========================================================================
 function exportLibrary() {
   if (state.items.length === 0) {
-    showToast('エクスポートするデータがありません', 'info');
+    showToast('No data to export', 'info');
     return;
   }
   
@@ -516,7 +516,7 @@ function exportLibrary() {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
   
-  showToast('ライブラリをエクスポートしました', 'success');
+  showToast('Library exported successfully', 'success');
 }
 
 function handleImportFile(e) {
@@ -542,7 +542,7 @@ function handleImportFile(e) {
         throw new Error('No valid items found in JSON file');
       }
 
-      if (confirm(`${validatedItems.length}件のアイテムをインポートしますか？既存のアイテムと結合されます。`)) {
+      if (confirm(`Do you want to import ${validatedItems.length} records? They will be merged with your current library.`)) {
         // Prevent duplicate IDs (regenerate if exists)
         const existingIds = new Set(state.items.map(item => item.id));
         const cleanItems = validatedItems.map(item => {
@@ -568,11 +568,11 @@ function handleImportFile(e) {
         state.items = [...cleanItems, ...state.items];
         saveItems();
         renderApp();
-        showToast(`${cleanItems.length}件のインポートに成功しました！`, 'success');
+        showToast(`Imported ${cleanItems.length} records successfully!`, 'success');
       }
     } catch (error) {
       console.error('Import Error:', error);
-      showToast('インポートに失敗しました。正しいJSONファイルを選択してください。', 'error');
+      showToast('Import failed. Please choose a valid JSON backup file.', 'error');
     }
     DOM.importFileInput.value = ''; // Reset input
   };
@@ -604,6 +604,7 @@ function formatDate(dateStr) {
   }
 }
 
+// English Toast Generator
 function showToast(message, type = 'success') {
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
@@ -630,47 +631,47 @@ function showToast(message, type = 'success') {
 }
 
 // ==========================================================================
-// MOCK DATA GENERATOR
+// MOCK DATA GENERATOR (English version)
 // ==========================================================================
 function getMockItems() {
   return [
     {
       id: 'mock-1',
-      title: 'ノルウェイの森',
+      title: 'Norwegian Wood',
       type: 'book',
-      creator: '村上春樹',
+      creator: 'Haruki Murakami',
       status: 'completed',
       rating: 5,
       coverUrl: '',
       startDate: '2026-01-01',
       endDate: '2026-01-10',
-      notes: '静かで美しく、寂しげな物語。直子と緑の対比が印象的で、何度も読み返したくなる作品です。背景描写がとても丁寧。',
+      notes: 'A quiet, beautiful, and melancholic story. The contrast between Naoko and Midori is striking, making it a book you want to re-read multiple times. Extremely atmospheric writing style.',
       createdAt: new Date(Date.now() - 3600000 * 24 * 3).toISOString()
     },
     {
       id: 'mock-2',
-      title: 'ストレンジャー・シングス 未知の世界',
+      title: 'Stranger Things',
       type: 'drama',
-      creator: 'ザ・ダファー・ブラザーズ',
+      creator: 'The Duffer Brothers',
       status: 'reading',
       rating: 4,
       coverUrl: '',
       startDate: '2026-06-15',
       endDate: '',
-      notes: 'シーズン1を視聴中。80年代の雰囲気が最高で、超能力少女イレブンと少年たちの友情にわくわくする。',
+      notes: 'Currently watching Season 1. The 80s atmosphere is amazing, and the friendship between the boys and Eleven is thrilling.',
       createdAt: new Date(Date.now() - 3600000 * 24 * 2).toISOString()
     },
     {
       id: 'mock-3',
-      title: '三体',
+      title: 'The Three-Body Problem',
       type: 'book',
-      creator: '劉慈欣',
+      creator: 'Cixin Liu',
       status: 'planning',
       rating: 0,
       coverUrl: '',
       startDate: '',
       endDate: '',
-      notes: 'SFの世界的傑作と聞いたので、時間がある時にじっくり読みたい。',
+      notes: 'Heard it is a masterpiece of sci-fi. Want to take my time and read it when I get a chance.',
       createdAt: new Date(Date.now() - 3600000 * 24 * 1).toISOString()
     }
   ];

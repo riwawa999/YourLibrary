@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YourLibrary - 本とドラマのマイライブラリ</title>
-  <meta name="description" content="本やドラマの視聴記録・読書記録を美しく管理できるプライベートライブラリ。読んだ本や見たドラマを評価・レビューして記録しましょう。">
+  <title>YourLibrary - Books & Dramas Log</title>
+  <meta name="description" content="A private, beautiful web app to log and review your books and drama logs. Track metrics and save history safely in your browser.">
   
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
@@ -39,15 +39,15 @@
       </div>
       
       <div class="header-actions">
-        <button id="export-btn" class="btn btn-secondary" title="データをエクスポート">
-          <i class="fa-solid fa-file-export"></i> <span>エクスポート</span>
+        <button id="export-btn" class="btn btn-secondary" title="Export Library Backup">
+          <i class="fa-solid fa-file-export"></i> <span>Export</span>
         </button>
-        <button id="import-btn" class="btn btn-secondary" title="データをインポート">
-          <i class="fa-solid fa-file-import"></i> <span>インポート</span>
+        <button id="import-btn" class="btn btn-secondary" title="Import Library Backup">
+          <i class="fa-solid fa-file-import"></i> <span>Import</span>
         </button>
         <input type="file" id="import-file-input" accept=".json" style="display: none;">
         
-        <button id="theme-toggle" class="theme-toggle-btn" aria-label="テーマ切り替え">
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
           <i class="fa-solid fa-sun"></i>
         </button>
       </div>
@@ -57,14 +57,14 @@
     <main class="app-main">
       
       <!-- Stats Dashboard -->
-      <section class="stats-section" aria-label="ダッシュボード統計">
+      <section class="stats-section" aria-label="Dashboard Statistics">
         <div class="stat-card">
           <div class="stat-icon icon-blue">
             <i class="fa-solid fa-cubes"></i>
           </div>
           <div class="stat-details">
             <span class="stat-value" id="stat-total">0</span>
-            <span class="stat-label">総コンテンツ数</span>
+            <span class="stat-label">Total Items</span>
           </div>
         </div>
 
@@ -74,7 +74,7 @@
           </div>
           <div class="stat-details">
             <span class="stat-value" id="stat-books">0</span>
-            <span class="stat-label">読んだ本</span>
+            <span class="stat-label">Books Logged</span>
           </div>
         </div>
 
@@ -84,7 +84,7 @@
           </div>
           <div class="stat-details">
             <span class="stat-value" id="stat-dramas">0</span>
-            <span class="stat-label">見たドラマ</span>
+            <span class="stat-label">Dramas Logged</span>
           </div>
         </div>
 
@@ -94,7 +94,7 @@
           </div>
           <div class="stat-details">
             <span class="stat-value" id="stat-rating">0.0</span>
-            <span class="stat-label">平均評価</span>
+            <span class="stat-label">Average Rating</span>
           </div>
         </div>
       </section>
@@ -103,37 +103,37 @@
       <section class="controls-section">
         <div class="search-bar">
           <i class="fa-solid fa-magnifying-glass search-icon"></i>
-          <input type="text" id="search-input" placeholder="タイトルや著者、監督で検索...">
+          <input type="text" id="search-input" placeholder="Search by title, author, or director...">
         </div>
         
         <div class="filters-row">
           <!-- Type Filter Tabs -->
           <div class="filter-tabs">
-            <button class="tab-btn active" data-type="all">すべて</button>
-            <button class="tab-btn" data-type="book"><i class="fa-solid fa-book-open"></i> 本</button>
-            <button class="tab-btn" data-type="drama"><i class="fa-solid fa-video"></i> ドラマ</button>
+            <button class="tab-btn active" data-type="all">All</button>
+            <button class="tab-btn" data-type="book"><i class="fa-solid fa-book-open"></i> Books</button>
+            <button class="tab-btn" data-type="drama"><i class="fa-solid fa-video"></i> Dramas</button>
           </div>
           
           <div class="filter-dropdowns">
             <!-- Status Filter -->
             <div class="select-wrapper">
-              <select id="status-filter" aria-label="ステータスフィルター">
-                <option value="all">すべてのステータス</option>
-                <option value="planning">読みたい / 観たい</option>
-                <option value="reading">進行中</option>
-                <option value="completed">完了</option>
+              <select id="status-filter" aria-label="Filter by Status">
+                <option value="all">All Statuses</option>
+                <option value="planning">Plan to Read/Watch</option>
+                <option value="reading">In Progress</option>
+                <option value="completed">Completed</option>
               </select>
               <i class="fa-solid fa-chevron-down select-icon"></i>
             </div>
             
             <!-- Sort Selector -->
             <div class="select-wrapper">
-              <select id="sort-selector" aria-label="並び替え">
-                <option value="newest">追加日が新しい順</option>
-                <option value="oldest">追加日が古い順</option>
-                <option value="rating-desc">評価の高い順</option>
-                <option value="rating-asc">評価の低い順</option>
-                <option value="title">タイトル順</option>
+              <select id="sort-selector" aria-label="Sort Order">
+                <option value="newest">Newest Added</option>
+                <option value="oldest">Oldest Added</option>
+                <option value="rating-desc">Highest Rated</option>
+                <option value="rating-asc">Lowest Rated</option>
+                <option value="title">Title (A-Z)</option>
               </select>
               <i class="fa-solid fa-sort select-icon"></i>
             </div>
@@ -141,7 +141,7 @@
 
           <!-- Add Button -->
           <button id="add-item-btn" class="btn btn-primary">
-            <i class="fa-solid fa-plus"></i> <span>新しく記録する</span>
+            <i class="fa-solid fa-plus"></i> <span>Add to Library</span>
           </button>
         </div>
       </section>
@@ -157,10 +157,10 @@
           <div class="empty-icon">
             <i class="fa-regular fa-folder-open"></i>
           </div>
-          <h3>ライブラリは空です</h3>
-          <p>新しく本やドラマを追加して、あなただけの思い出のライブラリを作りましょう！</p>
+          <h3>Your library is empty</h3>
+          <p>Start recording your favorite books and dramas to build your private collection!</p>
           <button id="empty-add-btn" class="btn btn-primary">
-            <i class="fa-solid fa-plus"></i> <span>最初のアイテムを追加する</span>
+            <i class="fa-solid fa-plus"></i> <span>Add Your First Item</span>
           </button>
         </div>
       </section>
@@ -177,8 +177,8 @@
   <div class="modal-overlay" id="item-modal">
     <div class="modal-container">
       <div class="modal-header">
-        <h2 id="modal-title">アイテムを記録する</h2>
-        <button class="modal-close-btn" id="modal-close-btn" aria-label="モーダルを閉じる">
+        <h2 id="modal-title">Record Media</h2>
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="Close Modal">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -188,16 +188,16 @@
         
         <div class="form-row">
           <div class="form-group flex-2">
-            <label for="form-title">タイトル <span class="required">*</span></label>
-            <input type="text" id="form-title" placeholder="例: ノルウェイの森、ストレンジャー・シングス" required>
+            <label for="form-title">Title <span class="required">*</span></label>
+            <input type="text" id="form-title" placeholder="e.g., Norwegian Wood, Stranger Things" required>
           </div>
           
           <div class="form-group flex-1">
-            <label for="form-type">カテゴリ <span class="required">*</span></label>
+            <label for="form-type">Category <span class="required">*</span></label>
             <div class="select-wrapper">
               <select id="form-type" required>
-                <option value="book">本 (Book)</option>
-                <option value="drama">ドラマ (Drama)</option>
+                <option value="book">Book</option>
+                <option value="drama">Drama</option>
               </select>
               <i class="fa-solid fa-chevron-down select-icon"></i>
             </div>
@@ -206,17 +206,17 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="form-creator" id="creator-label">著者名 <span class="required">*</span></label>
-            <input type="text" id="form-creator" placeholder="例: 村上春樹、ダファー兄弟" required>
+            <label for="form-creator" id="creator-label">Author <span class="required">*</span></label>
+            <input type="text" id="form-creator" placeholder="e.g., Haruki Murakami, The Duffer Brothers" required>
           </div>
           
           <div class="form-group">
-            <label for="form-status">ステータス <span class="required">*</span></label>
+            <label for="form-status">Status <span class="required">*</span></label>
             <div class="select-wrapper">
               <select id="form-status" required>
-                <option value="planning">読みたい / 観たい</option>
-                <option value="reading">進行中</option>
-                <option value="completed">完了</option>
+                <option value="planning">Plan to Read/Watch</option>
+                <option value="reading">In Progress</option>
+                <option value="completed">Completed</option>
               </select>
               <i class="fa-solid fa-chevron-down select-icon"></i>
             </div>
@@ -225,45 +225,45 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>評価 (1〜5)</label>
+            <label>Rating (1-5 Stars)</label>
             <div class="star-rating-input">
-              <input type="radio" id="star5" name="rating" value="5"><label for="star5" title="星5つ"><i class="fa-solid fa-star"></i></label>
-              <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="星4つ"><i class="fa-solid fa-star"></i></label>
-              <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="星3つ"><i class="fa-solid fa-star"></i></label>
-              <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="星2つ"><i class="fa-solid fa-star"></i></label>
-              <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="星1つ"><i class="fa-solid fa-star"></i></label>
+              <input type="radio" id="star5" name="rating" value="5"><label for="star5" title="5 Stars"><i class="fa-solid fa-star"></i></label>
+              <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4 Stars"><i class="fa-solid fa-star"></i></label>
+              <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3 Stars"><i class="fa-solid fa-star"></i></label>
+              <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2 Stars"><i class="fa-solid fa-star"></i></label>
+              <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1 Star"><i class="fa-solid fa-star"></i></label>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="form-cover">カバー画像URL (任意)</label>
+            <label for="form-cover">Cover Image URL (Optional)</label>
             <input type="url" id="form-cover" placeholder="https://example.com/cover.jpg">
           </div>
         </div>
 
         <div class="form-row dates-row">
           <div class="form-group">
-            <label for="form-start-date">開始日</label>
+            <label for="form-start-date">Start Date</label>
             <input type="date" id="form-start-date">
           </div>
           
           <div class="form-group">
-            <label for="form-end-date">完了日</label>
+            <label for="form-end-date">End Date</label>
             <input type="date" id="form-end-date">
           </div>
         </div>
 
         <div class="form-group">
-          <label for="form-notes">メモ / レビュー</label>
-          <textarea id="form-notes" rows="4" placeholder="作品の感想やメモをここに記入してください..."></textarea>
+          <label for="form-notes">Personal Review / Notes</label>
+          <textarea id="form-notes" rows="4" placeholder="Write your thoughts, reviews, or private notes about this work..."></textarea>
         </div>
 
         <div class="form-actions">
           <button type="button" id="form-delete-btn" class="btn btn-danger btn-left" style="display: none;">
-            <i class="fa-solid fa-trash-can"></i> 削除
+            <i class="fa-solid fa-trash-can"></i> Delete
           </button>
-          <button type="button" id="form-cancel-btn" class="btn btn-secondary">キャンセル</button>
-          <button type="submit" class="btn btn-primary">保存する</button>
+          <button type="button" id="form-cancel-btn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Record</button>
         </div>
       </form>
     </div>
