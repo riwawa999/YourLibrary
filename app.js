@@ -450,7 +450,7 @@ function renderDashboard() {
     </div>
     <div class="stat-details">
       <span class="stat-value">${avgRating}</span>
-      <span class="stat-label">Average Rating</span>
+      <span class="stat-label">My List</span>
     </div>
   `;
   DOM.statsSection.appendChild(ratingCard);
@@ -543,7 +543,7 @@ function renderLibraryPage(categoryName) {
     </div>
     <div class="stat-details">
       <span class="stat-value">${catAvg}</span>
-      <span class="stat-label">Average Rating</span>
+      <span class="stat-label">My List</span>
     </div>
   `;
   DOM.categoryStatsSection.appendChild(catRatingCard);
