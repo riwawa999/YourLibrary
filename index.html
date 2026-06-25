@@ -25,16 +25,48 @@
   <div class="ambient-glow bg-violet"></div>
   <div class="ambient-glow bg-rose"></div>
 
+  <!-- Sidebar Menu (Slides in from Left) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <aside class="sidebar-menu" id="sidebar-menu">
+    <div class="sidebar-header">
+      <h2>Menu</h2>
+      <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close Sidebar">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    
+    <div class="sidebar-content">
+      <section class="sidebar-section">
+        <h3><i class="fa-solid fa-tags"></i> Manage Categories</h3>
+        <p class="section-desc">Add or remove media categories you want to track (e.g., Books, Mangas, Dramas, Animes).</p>
+        
+        <!-- Add Category Form -->
+        <form id="add-category-form" class="sidebar-form">
+          <input type="text" id="new-category-input" placeholder="Category name..." required maxlength="20">
+          <button type="submit" class="btn btn-primary" title="Add Category"><i class="fa-solid fa-plus"></i></button>
+        </form>
+        
+        <!-- Categories List -->
+        <ul class="categories-list" id="categories-list">
+          <!-- Dynamically populated via JS -->
+        </ul>
+      </section>
+    </div>
+  </aside>
+
   <div class="app-container">
     <!-- Header -->
     <header class="app-header">
       <div class="logo-area">
+        <button id="menu-toggle-btn" class="menu-toggle-btn" aria-label="Toggle Sidebar Menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
         <div class="logo-icon">
           <i class="fa-solid fa-bookmark"></i>
         </div>
         <div class="logo-text">
           <h1>YourLibrary</h1>
-          <p class="subtitle">My Books & Dramas Log</p>
+          <p class="subtitle">My Personal Media Log</p>
         </div>
       </div>
       
@@ -57,46 +89,8 @@
     <main class="app-main">
       
       <!-- Stats Dashboard -->
-      <section class="stats-section" aria-label="Dashboard Statistics">
-        <div class="stat-card">
-          <div class="stat-icon icon-blue">
-            <i class="fa-solid fa-cubes"></i>
-          </div>
-          <div class="stat-details">
-            <span class="stat-value" id="stat-total">0</span>
-            <span class="stat-label">Total Items</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon icon-violet">
-            <i class="fa-solid fa-book"></i>
-          </div>
-          <div class="stat-details">
-            <span class="stat-value" id="stat-books">0</span>
-            <span class="stat-label">Books Logged</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon icon-rose">
-            <i class="fa-solid fa-tv"></i>
-          </div>
-          <div class="stat-details">
-            <span class="stat-value" id="stat-dramas">0</span>
-            <span class="stat-label">Dramas Logged</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon icon-amber">
-            <i class="fa-solid fa-star"></i>
-          </div>
-          <div class="stat-details">
-            <span class="stat-value" id="stat-rating">0.0</span>
-            <span class="stat-label">Average Rating</span>
-          </div>
-        </div>
+      <section class="stats-section" id="stats-section" aria-label="Dashboard Statistics">
+        <!-- Dynamically populated via JS -->
       </section>
 
       <!-- Controls & Filter Section -->
@@ -108,10 +102,8 @@
         
         <div class="filters-row">
           <!-- Type Filter Tabs -->
-          <div class="filter-tabs">
-            <button class="tab-btn active" data-type="all">All</button>
-            <button class="tab-btn" data-type="book"><i class="fa-solid fa-book-open"></i> Books</button>
-            <button class="tab-btn" data-type="drama"><i class="fa-solid fa-video"></i> Dramas</button>
+          <div class="filter-tabs" id="filter-tabs">
+            <!-- Dynamically populated via JS -->
           </div>
           
           <div class="filter-dropdowns">
@@ -196,8 +188,7 @@
             <label for="form-type">Category <span class="required">*</span></label>
             <div class="select-wrapper">
               <select id="form-type" required>
-                <option value="book">Book</option>
-                <option value="drama">Drama</option>
+                <!-- Dynamically populated via JS -->
               </select>
               <i class="fa-solid fa-chevron-down select-icon"></i>
             </div>
