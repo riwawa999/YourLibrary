@@ -1,23 +1,58 @@
-# YourLibrary
+# YourLibrary 📚📺
 
-YourLibrary is a premium, modern single-page web application to log and track the books you read and the dramas you watch.
+YourLibrary は、読んだ本や見たドラマを美しく、プライベートに記録・管理できるシングルページのWebアプリケーションです。  
+外部サーバーを一切介さず、ブラウザの `LocalStorage` のみを用いて動作するため、プライバシーが完全に守られた高速なログ環境を提供します。
 
-## Features
+👉 **[Webサイトで今すぐ使う (GitHub Pages)](https://riwawawa.github.io/YourLibrary/)**
 
-- **Dashboard**: Track your progress with high-level statistics.
-- **Glassmorphism Design**: Beautiful dark UI with smooth micro-animations.
-- **CRUD Operations**: Add, edit, and delete entries.
-- **Filtering & Search**: Quickly search your collection and filter by category (Book/Drama) or completion status.
-- **Ratings & Reviews**: Rate your items out of 5 stars and add reviews/notes.
-- **Data Portability**: Import and export your library as JSON.
-- **LocalStorage Persistence**: No backend required; all data stays on your browser.
+---
 
-## Tech Stack
+## 🌟 特徴 (Features)
 
-- **HTML5**: Semantic structure.
-- **Vanilla CSS**: Premium styling, custom grid system, fluid animations.
-- **Vanilla JavaScript**: State management and LocalStorage API.
+- **洗練されたダークUI**: グラスモーフィズム（背景ぼかし）とネオンアンビエントカラーを採用した、高級感溢れるデザイン。
+- **ダッシュボード統計**: 総アイテム数、本・ドラマそれぞれのカウント、平均評価（星評価）をリアルタイムに集計して表示。
+- **インテリジェントフィルタ & ソート**: タイトルや著作者（著者・監督）でのリアルタイム検索、タブによるカテゴリ切り替え、完了ステータス別の絞り込み、多彩な並び替えに対応。
+- **リッチな登録モーダル**: 開始日・終了日の記録、星1〜5の直感的な評価UI、カバー画像の個別設定、メモ/レビュー機能を搭載。
+- **カバー画像プレースホルダー**: カバー画像URLを指定しない場合、本のイメージ（パープル）やドラマのイメージ（ピンク）の美しいグラデーションカバーが自動生成されます。
+- **バックアップ & リカバリ**: ライブラリのデータをワンクリックでJSONファイルにエクスポート可能。また、JSONファイルからいつでも一括インポートしてデータを復元・マージできます。
+- **完全ローカル保存**: 全データはブラウザに自動保存されます。アカウント登録も不要で、今日からすぐに使い始められます。
 
-## How to Run
+---
 
-Simply open `index.html` in any modern web browser or run a local development server.
+## 🛠️ プロジェクト構造 (Project Structure)
+
+```text
+Library app/
+├── index.html       # アプリケーションの骨格・レイアウト・モーダル
+├── style.css        # カラーシステム（ライト/ダーク）、アニメーション、レスポンシブデザイン
+├── app.js           # 状態管理、LocalStorage連携、フィルタ・ソートロジック、インポート・エクスポート
+├── PRD.md           # 製品要求仕様書 (Product Requirement Document)
+└── README.md        # 本ドキュメント
+```
+
+詳細な製品仕様については、[PRD.md](./PRD.md) をご参照ください。
+
+---
+
+## 🚀 使い方 (How to Run)
+
+### ローカルでの実行方法
+特別なセットアップは不要です。プロジェクトのファイルをダウンロードし、`index.html` をブラウザで直接ダブルクリックして開くだけで動作します。
+
+または、ローカルサーバーを起動したい場合は、VS Codeの「Live Server」拡張機能などを使用するか、以下のコマンドを実行します：
+
+```bash
+# Pythonがインストールされている場合
+python3 -m http.server 8000
+```
+その後、ブラウザで `http://localhost:8000` にアクセスしてください。
+
+### GitHub Pagesへのデプロイ
+本リポジトリは GitHub Pages に対応しています。
+GitHubにプッシュした後、リポジトリの `Settings` > `Pages` からソースを `Deploy from a branch` に設定し、`main` ブランチの root `/` を指定するだけで自動的にオンライン公開されます。
+
+---
+
+## 📄 ライセンス (License)
+
+このプロジェクトは MIT ライセンスの下でライセンスされています。詳細は [LICENSE](./LICENSE) を参照してください（またはご自由にお使いください）。
