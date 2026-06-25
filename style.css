@@ -353,7 +353,7 @@ body.dark-theme .stat-card.active {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -484,6 +484,59 @@ body.dark-theme .tab-btn.active {
   color: var(--text-secondary);
   pointer-events: none;
   font-size: 0.8rem;
+}
+
+/* Sort Pills Bar */
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.sort-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.sort-pills {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sort-pill {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all var(--transition-speed) var(--transition-smooth);
+}
+
+.sort-pill:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.sort-pill.active {
+  background-color: var(--color-rose-glow);
+  border-color: var(--color-rose);
+  color: var(--color-rose);
+  font-weight: 600;
+}
+
+body.dark-theme .sort-pill.active {
+  background-color: var(--color-violet-glow);
+  border-color: var(--color-violet);
+  color: var(--color-violet);
 }
 
 /* ==========================================================================

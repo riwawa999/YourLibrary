@@ -52,7 +52,7 @@ const DOM = {
   searchInput: document.getElementById('search-input'),
   statusFilter: document.getElementById('status-filter'),
   languageFilter: document.getElementById('language-filter'),
-  sortSelector: document.getElementById('sort-selector'),
+  sortPillsContainer: document.getElementById('sort-pills'),
   addItemBtn: document.getElementById('add-item-btn'),
   emptyAddBtn: document.getElementById('empty-add-btn'),
   itemsGrid: document.getElementById('items-grid'),
@@ -255,7 +255,13 @@ function navigate(view) {
   
   if (DOM.searchInput) DOM.searchInput.value = '';
   if (DOM.statusFilter) DOM.statusFilter.value = 'all';
-  if (DOM.sortSelector) DOM.sortSelector.value = 'newest';
+  if (DOM.sortPillsContainer) {
+    const pills = DOM.sortPillsContainer.querySelectorAll('.sort-pill');
+    pills.forEach(p => {
+      const isNewest = p.getAttribute('data-sort') === 'newest';
+      p.classList.toggle('active', isNewest);
+    });
+  }
 
   // Show active view container and trigger renderer
   if (view === 'dashboard') {
@@ -303,10 +309,17 @@ function setupEventListeners() {
     renderList();
   });
 
-  DOM.sortSelector.addEventListener('change', (e) => {
-    state.filters.sortBy = e.target.value;
-    renderList();
-  });
+  if (DOM.sortPillsContainer) {
+    DOM.sortPillsContainer.addEventListener('click', (e) => {
+      const pill = e.target.closest('.sort-pill');
+      if (pill) {
+        state.filters.sortBy = pill.getAttribute('data-sort');
+        const pills = DOM.sortPillsContainer.querySelectorAll('.sort-pill');
+        pills.forEach(p => p.classList.toggle('active', p === pill));
+        renderList();
+      }
+    });
+  }
 
   // Modal Open Trigger
   DOM.addItemBtn.addEventListener('click', () => openModal());

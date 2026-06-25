@@ -136,17 +136,6 @@
                 <i class="fa-solid fa-chevron-down select-icon"></i>
               </div>
               
-              <!-- Sort Selector -->
-              <div class="select-wrapper">
-                <select id="sort-selector" aria-label="Sort Order">
-                  <option value="newest">Newest Added</option>
-                  <option value="oldest">Oldest Added</option>
-                  <option value="rating-desc">Highest Rated</option>
-                  <option value="rating-asc">Lowest Rated</option>
-                  <option value="title">Title (A-Z)</option>
-                </select>
-                <i class="fa-solid fa-sort select-icon"></i>
-              </div>
             </div>
 
             <!-- Contextual Add Button -->
@@ -155,6 +144,17 @@
             </button>
           </div>
         </section>
+
+        <!-- Sort Options Bar -->
+        <div class="sort-bar" id="sort-bar">
+          <span class="sort-label">Sort by:</span>
+          <div class="sort-pills" id="sort-pills">
+            <button class="sort-pill active" data-sort="newest">Newest Added</button>
+            <button class="sort-pill" data-sort="oldest">Oldest Added</button>
+            <button class="sort-pill" data-sort="rating-desc">Highest Rated</button>
+            <button class="sort-pill" data-sort="title">Title (A-Z)</button>
+          </div>
+        </div>
 
         <!-- Items Grid -->
         <section class="items-grid-section">
