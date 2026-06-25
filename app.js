@@ -1272,6 +1272,22 @@ function toggleModalFields(status) {
   }
 }
 
+function updateCreatorLabel() {
+  if (!DOM.creatorLabel || !DOM.formType) return;
+  const category = DOM.formType.value;
+  const lowerCategory = (category || '').toLowerCase();
+  
+  if (lowerCategory.includes('book') || lowerCategory.includes('manga') || lowerCategory.includes('novel')) {
+    DOM.creatorLabel.textContent = 'Author';
+  } else if (lowerCategory.includes('drama') || lowerCategory.includes('show') || lowerCategory.includes('movie')) {
+    DOM.creatorLabel.textContent = 'Director';
+  } else if (lowerCategory.includes('anime')) {
+    DOM.creatorLabel.textContent = 'Studio / Director';
+  } else {
+    DOM.creatorLabel.textContent = 'Creator';
+  }
+}
+
 function handleFormSubmit(e) {
   e.preventDefault();
   
