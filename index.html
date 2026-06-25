@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YourLibrary - 本とドラマのマイライブラリ</title>
+  <meta name="description" content="本やドラマの視聴記録・読書記録を美しく管理できるプライベートライブラリ。読んだ本や見たドラマを評価・レビューして記録しましょう。">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+  <!-- Decorative Ambient Gradients -->
+  <div class="ambient-glow bg-violet"></div>
+  <div class="ambient-glow bg-rose"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-bookmark"></i>
+        </div>
+        <div class="logo-text">
+          <h1>YourLibrary</h1>
+          <p class="subtitle">My Books & Dramas Log</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button id="export-btn" class="btn btn-secondary" title="データをエクスポート">
+          <i class="fa-solid fa-file-export"></i> <span>エクスポート</span>
+        </button>
+        <button id="import-btn" class="btn btn-secondary" title="データをインポート">
+          <i class="fa-solid fa-file-import"></i> <span>インポート</span>
+        </button>
+        <input type="file" id="import-file-input" accept=".json" style="display: none;">
+        
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="テーマ切り替え">
+          <i class="fa-solid fa-sun"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-main">
+      
+      <!-- Stats Dashboard -->
+      <section class="stats-section" aria-label="ダッシュボード統計">
+        <div class="stat-card">
+          <div class="stat-icon icon-blue">
+            <i class="fa-solid fa-cubes"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-value" id="stat-total">0</span>
+            <span class="stat-label">総コンテンツ数</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon icon-violet">
+            <i class="fa-solid fa-book"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-value" id="stat-books">0</span>
+            <span class="stat-label">読んだ本</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon icon-rose">
+            <i class="fa-solid fa-tv"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-value" id="stat-dramas">0</span>
+            <span class="stat-label">見たドラマ</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon icon-amber">
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-value" id="stat-rating">0.0</span>
+            <span class="stat-label">平均評価</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Controls & Filter Section -->
+      <section class="controls-section">
+        <div class="search-bar">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="search-input" placeholder="タイトルや著者、監督で検索...">
+        </div>
+        
+        <div class="filters-row">
+          <!-- Type Filter Tabs -->
+          <div class="filter-tabs">
+            <button class="tab-btn active" data-type="all">すべて</button>
+            <button class="tab-btn" data-type="book"><i class="fa-solid fa-book-open"></i> 本</button>
+            <button class="tab-btn" data-type="drama"><i class="fa-solid fa-video"></i> ドラマ</button>
+          </div>
+          
+          <div class="filter-dropdowns">
+            <!-- Status Filter -->
+            <div class="select-wrapper">
+              <select id="status-filter" aria-label="ステータスフィルター">
+                <option value="all">すべてのステータス</option>
+                <option value="planning">読みたい / 観たい</option>
+                <option value="reading">進行中</option>
+                <option value="completed">完了</option>
+              </select>
+              <i class="fa-solid fa-chevron-down select-icon"></i>
+            </div>
+            
+            <!-- Sort Selector -->
+            <div class="select-wrapper">
+              <select id="sort-selector" aria-label="並び替え">
+                <option value="newest">追加日が新しい順</option>
+                <option value="oldest">追加日が古い順</option>
+                <option value="rating-desc">評価の高い順</option>
+                <option value="rating-asc">評価の低い順</option>
+                <option value="title">タイトル順</option>
+              </select>
+              <i class="fa-solid fa-sort select-icon"></i>
+            </div>
+          </div>
+
+          <!-- Add Button -->
+          <button id="add-item-btn" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> <span>新しく記録する</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Items Grid -->
+      <section class="items-grid-section">
+        <div class="items-grid" id="items-grid">
+          <!-- Dynamically populated via JS -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">
+            <i class="fa-regular fa-folder-open"></i>
+          </div>
+          <h3>ライブラリは空です</h3>
+          <p>新しく本やドラマを追加して、あなただけの思い出のライブラリを作りましょう！</p>
+          <button id="empty-add-btn" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> <span>最初のアイテムを追加する</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>&copy; 2026 YourLibrary. Private & Beautiful Media Logger.</p>
+    </footer>
+  </div>
+
+  <!-- Add / Edit Modal -->
+  <div class="modal-overlay" id="item-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 id="modal-title">アイテムを記録する</h2>
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="モーダルを閉じる">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      
+      <form id="item-form" class="modal-form">
+        <input type="hidden" id="item-id">
+        
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label for="form-title">タイトル <span class="required">*</span></label>
+            <input type="text" id="form-title" placeholder="例: ノルウェイの森、ストレンジャー・シングス" required>
+          </div>
+          
+          <div class="form-group flex-1">
+            <label for="form-type">カテゴリ <span class="required">*</span></label>
+            <div class="select-wrapper">
+              <select id="form-type" required>
+                <option value="book">本 (Book)</option>
+                <option value="drama">ドラマ (Drama)</option>
+              </select>
+              <i class="fa-solid fa-chevron-down select-icon"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="form-creator" id="creator-label">著者名 <span class="required">*</span></label>
+            <input type="text" id="form-creator" placeholder="例: 村上春樹、ダファー兄弟" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="form-status">ステータス <span class="required">*</span></label>
+            <div class="select-wrapper">
+              <select id="form-status" required>
+                <option value="planning">読みたい / 観たい</option>
+                <option value="reading">進行中</option>
+                <option value="completed">完了</option>
+              </select>
+              <i class="fa-solid fa-chevron-down select-icon"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>評価 (1〜5)</label>
+            <div class="star-rating-input">
+              <input type="radio" id="star5" name="rating" value="5"><label for="star5" title="星5つ"><i class="fa-solid fa-star"></i></label>
+              <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="星4つ"><i class="fa-solid fa-star"></i></label>
+              <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="星3つ"><i class="fa-solid fa-star"></i></label>
+              <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="星2つ"><i class="fa-solid fa-star"></i></label>
+              <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="星1つ"><i class="fa-solid fa-star"></i></label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="form-cover">カバー画像URL (任意)</label>
+            <input type="url" id="form-cover" placeholder="https://example.com/cover.jpg">
+          </div>
+        </div>
+
+        <div class="form-row dates-row">
+          <div class="form-group">
+            <label for="form-start-date">開始日</label>
+            <input type="date" id="form-start-date">
+          </div>
+          
+          <div class="form-group">
+            <label for="form-end-date">完了日</label>
+            <input type="date" id="form-end-date">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="form-notes">メモ / レビュー</label>
+          <textarea id="form-notes" rows="4" placeholder="作品の感想やメモをここに記入してください..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="form-delete-btn" class="btn btn-danger btn-left" style="display: none;">
+            <i class="fa-solid fa-trash-can"></i> 削除
+          </button>
+          <button type="button" id="form-cancel-btn" class="btn btn-secondary">キャンセル</button>
+          <button type="submit" class="btn btn-primary">保存する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Custom Javascript -->
+  <script src="app.js"></script>
+</body>
+</html>
