@@ -804,15 +804,21 @@ function renderList() {
       document.getElementById('empty-add-btn').addEventListener('click', () => openModal());
     } else {
       // Filtered out empty state
+      const singularCategory = activeCategory.replace(/s$/, ''); // e.g. "Book"
       DOM.emptyState.innerHTML = `
         <div class="empty-icon">
           <i class="fa-solid fa-filter"></i>
         </div>
         <h3>No matching results</h3>
         <p>No items match your active search query or filters.</p>
-        <button id="reset-filters-btn" class="btn btn-secondary" style="margin-top: 1rem;">
-          <i class="fa-solid fa-rotate-left"></i> Reset Filters
-        </button>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem; justify-content: center; flex-wrap: wrap;">
+          <button id="reset-filters-btn" class="btn btn-secondary">
+            <i class="fa-solid fa-rotate-left"></i> Reset Filters
+          </button>
+          <button id="empty-add-btn" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add ${singularCategory}
+          </button>
+        </div>
       `;
       document.getElementById('reset-filters-btn').addEventListener('click', () => {
         state.filters.search = '';
@@ -823,6 +829,7 @@ function renderList() {
         if (DOM.languageFilter) DOM.languageFilter.value = 'all';
         renderList();
       });
+      document.getElementById('empty-add-btn').addEventListener('click', () => openModal());
     }
   } else {
     DOM.emptyState.style.display = 'none';
@@ -1351,6 +1358,13 @@ function handleFormSubmit(e) {
     if (!id) { // Only for adding new items
       state.filters.status = status;
       if (DOM.statusFilter) DOM.statusFilter.value = status;
+
+      // Clear search and language filters to ensure the added item is immediately visible
+      state.filters.search = '';
+      if (DOM.searchInput) DOM.searchInput.value = '';
+
+      state.filters.language = 'all';
+      if (DOM.languageFilter) DOM.languageFilter.value = 'all';
     }
     renderLibraryPage(state.currentView);
   }
