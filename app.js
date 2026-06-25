@@ -1342,8 +1342,18 @@ function handleFormSubmit(e) {
   saveItems();
   closeModal();
   
-  // Refresh layout
-  navigate(state.currentView);
+  // Refresh layout without resetting filters (unless on dashboard/settings)
+  if (state.currentView === 'dashboard') {
+    navigate('dashboard');
+  } else if (state.currentView === 'settings') {
+    navigate('settings');
+  } else {
+    if (!id) { // Only for adding new items
+      state.filters.status = status;
+      if (DOM.statusFilter) DOM.statusFilter.value = status;
+    }
+    renderLibraryPage(state.currentView);
+  }
 }
 
 function handleDeleteItem() {
@@ -1354,7 +1364,15 @@ function handleDeleteItem() {
     state.items = state.items.filter(item => item.id !== id);
     saveItems();
     closeModal();
-    navigate(state.currentView);
+    
+    // Refresh layout preserving current filters
+    if (state.currentView === 'dashboard') {
+      navigate('dashboard');
+    } else if (state.currentView === 'settings') {
+      navigate('settings');
+    } else {
+      renderLibraryPage(state.currentView);
+    }
     showToast('Record deleted.', 'info');
   }
 }
