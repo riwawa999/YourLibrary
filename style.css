@@ -1574,3 +1574,201 @@ body.dark-theme .sidebar-nav-item.active {
   color: var(--color-red);
   background-color: rgba(239, 68, 68, 0.1);
 }
+
+/* ==========================================================================
+   DASHBOARD TOPIC ANALYTICS
+   ========================================================================== */
+.analytics-section {
+  margin-bottom: 2.5rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.analytics-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.analytics-card h4 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.analytics-card h4 i {
+  color: var(--color-rose);
+}
+
+body.dark-theme .analytics-card h4 i {
+  color: var(--color-violet);
+}
+
+.category-analysis-row, .category-rating-row {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  transition: all var(--transition-speed) var(--transition-smooth);
+}
+
+.category-analysis-row:last-child, .category-rating-row:last-child {
+  margin-bottom: 0;
+}
+
+.category-analysis-row:hover, .category-rating-row:hover {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transform: translateY(-2px);
+}
+
+body.dark-theme .category-analysis-row:hover, body.dark-theme .category-rating-row:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.category-info, .category-rating-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.category-info .category-name, .category-rating-header .category-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.category-info .category-count, .category-rating-header .category-avg-rating {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.category-rating-header .category-avg-rating {
+  color: var(--color-amber);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Stacked Progress Bar */
+.progress-bar-stacked {
+  height: 8px;
+  background-color: var(--bg-tertiary);
+  border-radius: 9999px;
+  display: flex;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.progress-segment.completed {
+  background-color: var(--color-green);
+}
+
+.progress-segment.reading {
+  background-color: var(--color-blue);
+}
+
+.progress-segment.planning {
+  background-color: var(--color-rose);
+}
+
+body.dark-theme .progress-segment.planning {
+  background-color: var(--color-violet);
+}
+
+/* Rating Meter Bar */
+.category-rating-bar {
+  height: 6px;
+  background-color: var(--bg-tertiary);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.rating-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-amber), #fbbf24);
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+.category-legend {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.category-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.category-legend .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.category-legend .dot.completed {
+  background-color: var(--color-green);
+}
+
+.category-legend .dot.reading {
+  background-color: var(--color-blue);
+}
+
+.category-legend .dot.planning {
+  background-color: var(--color-rose);
+}
+
+body.dark-theme .category-legend .dot.planning {
+  background-color: var(--color-violet);
+}
+
+.category-top-item {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-top-item i {
+  color: var(--color-amber);
+}
+
+.category-top-item span {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+

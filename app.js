@@ -57,6 +57,7 @@ const DOM = {
   emptyAddBtn: document.getElementById('empty-add-btn'),
   itemsGrid: document.getElementById('items-grid'),
   emptyState: document.getElementById('empty-state'),
+  analyticsGrid: document.getElementById('analytics-grid'),
 
   // Settings View Elements
   addCategoryForm: document.getElementById('add-category-form'),
@@ -420,10 +421,14 @@ function renderSidebarNav() {
 // ==========================================================================
 function renderDashboard() {
   DOM.statsSection.innerHTML = '';
+  if (DOM.analyticsGrid) DOM.analyticsGrid.innerHTML = '';
 
   const total = state.items.length;
+  const completedCount = state.items.filter(i => i.status === 'completed').length;
+  const readingCount = state.items.filter(i => i.status === 'reading').length;
+  const planningCount = state.items.filter(i => i.status === 'planning').length;
   
-  // Total Items Card
+  // 1. Total Logged Card
   const totalCard = document.createElement('div');
   totalCard.className = 'stat-card';
   totalCard.innerHTML = `
@@ -432,50 +437,43 @@ function renderDashboard() {
     </div>
     <div class="stat-details">
       <span class="stat-value">${total}</span>
-      <span class="stat-label">Total Items</span>
+      <span class="stat-label">Total Logged</span>
     </div>
   `;
   totalCard.addEventListener('click', () => openModal());
   DOM.statsSection.appendChild(totalCard);
 
-  // Stats for the top 2 categories (by item count)
-  const categoryCounts = state.categories.map(cat => {
-    return {
-      name: cat,
-      count: state.items.filter(i => i.type === cat).length
-    };
-  });
-  categoryCounts.sort((a, b) => b.count - a.count);
-  const topCategories = categoryCounts.slice(0, 2);
+  // 2. Completed Card
+  const completedCard = document.createElement('div');
+  completedCard.className = 'stat-card';
+  completedCard.innerHTML = `
+    <div class="stat-icon icon-violet" style="color: var(--color-green); background-color: rgba(16, 185, 129, 0.12);">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <div class="stat-details">
+      <span class="stat-value">${completedCount}</span>
+      <span class="stat-label">Completed</span>
+    </div>
+  `;
+  completedCard.addEventListener('click', () => openModal(null, 'completed'));
+  DOM.statsSection.appendChild(completedCard);
 
-  topCategories.forEach(catObj => {
-    const card = document.createElement('div');
-    card.className = 'stat-card';
-    const grad = getCategoryGradient(catObj.name);
-    
-    let iconClass = 'fa-solid fa-bookmark';
-    const lowerName = catObj.name.toLowerCase();
-    if (lowerName.includes('book')) iconClass = 'fa-solid fa-book';
-    if (lowerName.includes('drama') || lowerName.includes('show') || lowerName.includes('movie')) iconClass = 'fa-solid fa-tv';
-    if (lowerName.includes('manga') || lowerName.includes('comic')) iconClass = 'fa-solid fa-scroll';
-    if (lowerName.includes('anime')) iconClass = 'fa-solid fa-video';
+  // 3. In Progress Card
+  const progressCard = document.createElement('div');
+  progressCard.className = 'stat-card';
+  progressCard.innerHTML = `
+    <div class="stat-icon icon-blue">
+      <i class="fa-solid fa-spinner"></i>
+    </div>
+    <div class="stat-details">
+      <span class="stat-value">${readingCount}</span>
+      <span class="stat-label">In Progress</span>
+    </div>
+  `;
+  progressCard.addEventListener('click', () => openModal(null, 'reading'));
+  DOM.statsSection.appendChild(progressCard);
 
-    card.innerHTML = `
-      <div class="stat-icon" style="background-color: rgba(236, 72, 153, 0.08); color: ${grad[0]};">
-        <i class="${iconClass}"></i>
-      </div>
-      <div class="stat-details">
-        <span class="stat-value">${catObj.count}</span>
-        <span class="stat-label">${escapeHtml(catObj.name)}</span>
-      </div>
-    `;
-    card.addEventListener('click', () => openModal(null, null, catObj.name));
-    DOM.statsSection.appendChild(card);
-  });
-
-  // My List (Planning) Card
-  const planningCount = state.items.filter(i => i.status === 'planning').length;
-
+  // 4. My List Card
   const planningCard = document.createElement('div');
   planningCard.className = 'stat-card';
   planningCard.innerHTML = `
@@ -489,6 +487,99 @@ function renderDashboard() {
   `;
   planningCard.addEventListener('click', () => openModal(null, 'planning'));
   DOM.statsSection.appendChild(planningCard);
+
+  // 5. Topic Analytics Cards
+  if (DOM.analyticsGrid) {
+    // Card A: Topic Distribution & Progress Breakdown
+    const distCard = document.createElement('div');
+    distCard.className = 'analytics-card';
+    distCard.innerHTML = `
+      <h4><i class="fa-solid fa-chart-pie"></i> Distribution by Status</h4>
+      <div class="distribution-content" id="distribution-content"></div>
+    `;
+    DOM.analyticsGrid.appendChild(distCard);
+    const distContent = distCard.querySelector('#distribution-content');
+
+    // Card B: Topic Ratings & Highlights
+    const ratingsCard = document.createElement('div');
+    ratingsCard.className = 'analytics-card';
+    ratingsCard.innerHTML = `
+      <h4><i class="fa-solid fa-ranking-stars"></i> Average Ratings & Awards</h4>
+      <div class="ratings-content" id="ratings-content"></div>
+    `;
+    DOM.analyticsGrid.appendChild(ratingsCard);
+    const ratingsContent = ratingsCard.querySelector('#ratings-content');
+
+    // Compute stats for each category
+    state.categories.forEach(category => {
+      const catItems = state.items.filter(i => i.type === category);
+      const catCount = catItems.length;
+
+      // Card A: stacked progress segment computation
+      const catCompleted = catItems.filter(i => i.status === 'completed').length;
+      const catReading = catItems.filter(i => i.status === 'reading').length;
+      const catPlanning = catItems.filter(i => i.status === 'planning').length;
+
+      const compPct = catCount > 0 ? (catCompleted / catCount) * 100 : 0;
+      const readPct = catCount > 0 ? (catReading / catCount) * 100 : 0;
+      const planPct = catCount > 0 ? (catPlanning / catCount) * 100 : 0;
+
+      const rowA = document.createElement('div');
+      rowA.className = 'category-analysis-row';
+      rowA.style.cursor = 'pointer';
+      rowA.innerHTML = `
+        <div class="category-info">
+          <span class="category-name">${escapeHtml(category)}</span>
+          <span class="category-count">${catCount} ${catCount === 1 ? 'item' : 'items'}</span>
+        </div>
+        <div class="progress-bar-stacked">
+          <div class="progress-segment completed" style="width: ${compPct}%;" title="Completed: ${catCompleted}"></div>
+          <div class="progress-segment reading" style="width: ${readPct}%;" title="In Progress: ${catReading}"></div>
+          <div class="progress-segment planning" style="width: ${planPct}%;" title="My List: ${catPlanning}"></div>
+        </div>
+        <div class="category-legend">
+          <span><span class="dot completed"></span> Completed: ${catCompleted}</span>
+          <span><span class="dot reading"></span> In Progress: ${catReading}</span>
+          <span><span class="dot planning"></span> My List: ${catPlanning}</span>
+        </div>
+      `;
+      rowA.addEventListener('click', () => navigate(category));
+      distContent.appendChild(rowA);
+
+      // Card B: average rating and highlights computation
+      const ratedItems = catItems.filter(i => i.rating > 0);
+      const avgRating = ratedItems.length > 0 
+        ? (ratedItems.reduce((sum, item) => sum + item.rating, 0) / ratedItems.length).toFixed(1) 
+        : '0.0';
+
+      // Find top-rated item
+      let topItemTitle = 'None';
+      if (ratedItems.length > 0) {
+        const sortedRated = [...ratedItems].sort((a, b) => b.rating - a.rating || new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        topItemTitle = sortedRated[0].title;
+      }
+
+      const ratingPct = (parseFloat(avgRating) / 5) * 100;
+
+      const rowB = document.createElement('div');
+      rowB.className = 'category-rating-row';
+      rowB.style.cursor = 'pointer';
+      rowB.innerHTML = `
+        <div class="category-rating-header">
+          <span class="category-name">${escapeHtml(category)}</span>
+          <span class="category-avg-rating"><i class="fa-solid fa-star"></i> ${avgRating}</span>
+        </div>
+        <div class="category-rating-bar">
+          <div class="rating-bar-fill" style="width: ${ratingPct}%;"></div>
+        </div>
+        <div class="category-top-item">
+          <i class="fa-solid fa-award"></i> Top Rated: <span>${escapeHtml(topItemTitle)}</span>
+        </div>
+      `;
+      rowB.addEventListener('click', () => navigate(category));
+      ratingsContent.appendChild(rowB);
+    });
+  }
 
   // Render "Recent Logs" list (newest 4 items)
   DOM.recentGrid.innerHTML = '';
