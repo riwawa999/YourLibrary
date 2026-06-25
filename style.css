@@ -276,6 +276,7 @@ body.light-theme .ambient-glow {
   box-shadow: var(--card-shadow);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
   transition: transform var(--transition-speed) var(--transition-bounce),
               border-color var(--transition-speed) var(--transition-smooth);
 }

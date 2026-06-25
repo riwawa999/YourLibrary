@@ -409,6 +409,7 @@ function renderDashboard() {
       <span class="stat-label">Total Items</span>
     </div>
   `;
+  totalCard.addEventListener('click', () => openModal());
   DOM.statsSection.appendChild(totalCard);
 
   // Stats for the top 2 categories (by item count)
@@ -442,6 +443,7 @@ function renderDashboard() {
         <span class="stat-label">${escapeHtml(catObj.name)}</span>
       </div>
     `;
+    card.addEventListener('click', () => openModal(null, null, catObj.name));
     DOM.statsSection.appendChild(card);
   });
 
@@ -459,6 +461,7 @@ function renderDashboard() {
       <span class="stat-label">My List</span>
     </div>
   `;
+  planningCard.addEventListener('click', () => openModal(null, 'planning'));
   DOM.statsSection.appendChild(planningCard);
 
   // Render "Recent Logs" list (newest 4 items)
@@ -503,6 +506,7 @@ function renderLibraryPage(categoryName) {
       <span class="stat-label">Total Logged</span>
     </div>
   `;
+  catTotalCard.addEventListener('click', () => openModal(null));
   DOM.categoryStatsSection.appendChild(catTotalCard);
 
   // Completed in category card
@@ -518,6 +522,7 @@ function renderLibraryPage(categoryName) {
       <span class="stat-label">Completed</span>
     </div>
   `;
+  completedCard.addEventListener('click', () => openModal(null, 'completed'));
   DOM.categoryStatsSection.appendChild(completedCard);
 
   // In Progress in category card
@@ -533,6 +538,7 @@ function renderLibraryPage(categoryName) {
       <span class="stat-label">In Progress</span>
     </div>
   `;
+  progressCard.addEventListener('click', () => openModal(null, 'reading'));
   DOM.categoryStatsSection.appendChild(progressCard);
 
   // My List (Planning) in category card
@@ -549,6 +555,7 @@ function renderLibraryPage(categoryName) {
       <span class="stat-label">My List</span>
     </div>
   `;
+  catPlanningCard.addEventListener('click', () => openModal(null, 'planning'));
   DOM.categoryStatsSection.appendChild(catPlanningCard);
 
   // Dynamically populate Language Filter dropdown
@@ -1085,7 +1092,7 @@ function populateCategorySelect() {
   });
 }
 
-function openModal(item = null) {
+function openModal(item = null, defaultStatus = null, defaultCategory = null) {
   DOM.itemForm.reset();
   
   populateCategorySelect();
@@ -1125,6 +1132,12 @@ function openModal(item = null) {
     // Contextual Pre-fill category
     if (state.currentView !== 'dashboard' && state.currentView !== 'settings') {
       DOM.formType.value = state.currentView;
+    } else if (defaultCategory) {
+      DOM.formType.value = defaultCategory;
+    }
+
+    if (defaultStatus) {
+      DOM.formStatus.value = defaultStatus;
     }
   }
   
