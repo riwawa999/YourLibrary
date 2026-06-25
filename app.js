@@ -436,24 +436,21 @@ function renderDashboard() {
     DOM.statsSection.appendChild(card);
   });
 
-  // Average Rating Card
-  const ratedItems = state.items.filter(i => i.rating > 0);
-  const avgRating = ratedItems.length > 0
-    ? (ratedItems.reduce((acc, curr) => acc + curr.rating, 0) / ratedItems.length).toFixed(1)
-    : '0.0';
+  // My List (Planning) Card
+  const planningCount = state.items.filter(i => i.status === 'planning').length;
 
-  const ratingCard = document.createElement('div');
-  ratingCard.className = 'stat-card';
-  ratingCard.innerHTML = `
+  const planningCard = document.createElement('div');
+  planningCard.className = 'stat-card';
+  planningCard.innerHTML = `
     <div class="stat-icon icon-amber">
-      <i class="fa-solid fa-star"></i>
+      <i class="fa-solid fa-bookmark"></i>
     </div>
     <div class="stat-details">
-      <span class="stat-value">${avgRating}</span>
+      <span class="stat-value">${planningCount}</span>
       <span class="stat-label">My List</span>
     </div>
   `;
-  DOM.statsSection.appendChild(ratingCard);
+  DOM.statsSection.appendChild(planningCard);
 
   // Render "Recent Logs" list (newest 4 items)
   DOM.recentGrid.innerHTML = '';
@@ -529,24 +526,21 @@ function renderLibraryPage(categoryName) {
   `;
   DOM.categoryStatsSection.appendChild(progressCard);
 
-  // Avg Rating in category card
-  const catRatedItems = categoryItems.filter(i => i.rating > 0);
-  const catAvg = catRatedItems.length > 0
-    ? (catRatedItems.reduce((acc, curr) => acc + curr.rating, 0) / catRatedItems.length).toFixed(1)
-    : '0.0';
+  // My List (Planning) in category card
+  const catPlanningCount = categoryItems.filter(i => i.status === 'planning').length;
 
-  const catRatingCard = document.createElement('div');
-  catRatingCard.className = 'stat-card';
-  catRatingCard.innerHTML = `
+  const catPlanningCard = document.createElement('div');
+  catPlanningCard.className = 'stat-card';
+  catPlanningCard.innerHTML = `
     <div class="stat-icon icon-amber">
-      <i class="fa-solid fa-star"></i>
+      <i class="fa-solid fa-bookmark"></i>
     </div>
     <div class="stat-details">
-      <span class="stat-value">${catAvg}</span>
+      <span class="stat-value">${catPlanningCount}</span>
       <span class="stat-label">My List</span>
     </div>
   `;
-  DOM.categoryStatsSection.appendChild(catRatingCard);
+  DOM.categoryStatsSection.appendChild(catPlanningCard);
 
   // Dynamically populate Language Filter dropdown
   populateLanguageFilter();
