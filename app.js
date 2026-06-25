@@ -299,10 +299,12 @@ function setupEventListeners() {
     renderList();
   });
 
-  DOM.statusFilter.addEventListener('change', (e) => {
-    state.filters.status = e.target.value;
-    renderList();
-  });
+  if (DOM.statusFilter) {
+    DOM.statusFilter.addEventListener('change', (e) => {
+      state.filters.status = e.target.value;
+      renderList();
+    });
+  }
 
   DOM.languageFilter.addEventListener('change', (e) => {
     state.filters.language = e.target.value;

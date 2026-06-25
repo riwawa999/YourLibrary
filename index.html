@@ -116,44 +116,33 @@
 
         <!-- Controls Section -->
         <section class="controls-section">
-          <div class="filters-row">
-            <div class="filter-dropdowns">
-              <!-- Status Filter -->
-              <div class="select-wrapper">
-                <select id="status-filter" aria-label="Filter by Status">
-                  <option value="all">All Statuses</option>
-                  <option value="planning">Add to My List</option>
-                  <option value="reading">In Progress</option>
-                  <option value="completed">Completed</option>
-                </select>
-                <i class="fa-solid fa-chevron-down select-icon"></i>
-              </div>
-
-              <!-- Language Filter -->
-              <div class="select-wrapper">
-                <select id="language-filter" aria-label="Filter by Language">
-                  <!-- Dynamically populated via JS -->
-                </select>
-                <i class="fa-solid fa-chevron-down select-icon"></i>
-              </div>
-            </div>
-            
-            <!-- Search Bar (Previously Add Button was here) -->
-            <div class="search-bar">
-              <i class="fa-solid fa-magnifying-glass search-icon"></i>
-              <input type="text" id="search-input" placeholder="Search by title or creator...">
-            </div>
+          <!-- Search Bar -->
+          <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="search-input" placeholder="Search by title or creator...">
           </div>
         </section>
 
-        <!-- Sort Options Bar -->
+        <!-- Sort & Filter Bar -->
         <div class="sort-bar" id="sort-bar">
-          <span class="sort-label">Sort by:</span>
-          <div class="sort-pills" id="sort-pills">
-            <button class="sort-pill active" data-sort="newest">Newest Added</button>
-            <button class="sort-pill" data-sort="oldest">Oldest Added</button>
-            <button class="sort-pill" data-sort="rating-desc">Highest Rated</button>
-            <button class="sort-pill" data-sort="title">Title (A-Z)</button>
+          <div class="sort-bar-left">
+            <span class="sort-label">Sort by:</span>
+            <div class="sort-pills" id="sort-pills">
+              <button class="sort-pill active" data-sort="newest">Newest Added</button>
+              <button class="sort-pill" data-sort="oldest">Oldest Added</button>
+              <button class="sort-pill" data-sort="rating-desc">Highest Rated</button>
+              <button class="sort-pill" data-sort="title">Title (A-Z)</button>
+            </div>
+          </div>
+          
+          <div class="sort-bar-right">
+            <!-- Language Filter Dropdown -->
+            <div class="select-wrapper language-filter-wrapper">
+              <select id="language-filter" aria-label="Filter by Language">
+                <!-- Dynamically populated via JS -->
+              </select>
+              <i class="fa-solid fa-chevron-down select-icon"></i>
+            </div>
           </div>
         </div>
 
