@@ -99,8 +99,14 @@
       <div id="view-library" class="view-container hidden">
         <!-- Page Header -->
         <header class="library-page-header">
-          <h2 id="library-title">Category Collection</h2>
-          <p id="library-subtitle" class="section-desc">Manage and view your collection.</p>
+          <div class="library-header-text">
+            <h2 id="library-title">Category Collection</h2>
+            <p id="library-subtitle" class="section-desc">Manage and view your collection.</p>
+          </div>
+          <!-- Contextual Add Button -->
+          <button id="add-item-btn" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> <span id="add-btn-text">Add Item</span>
+          </button>
         </header>
 
         <!-- Stats Section -->
@@ -110,11 +116,6 @@
 
         <!-- Controls Section -->
         <section class="controls-section">
-          <div class="search-bar">
-            <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" id="search-input" placeholder="Search by title or creator...">
-          </div>
-          
           <div class="filters-row">
             <div class="filter-dropdowns">
               <!-- Status Filter -->
@@ -135,13 +136,13 @@
                 </select>
                 <i class="fa-solid fa-chevron-down select-icon"></i>
               </div>
-              
             </div>
-
-            <!-- Contextual Add Button -->
-            <button id="add-item-btn" class="btn btn-primary">
-              <i class="fa-solid fa-plus"></i> <span id="add-btn-text">Add Item</span>
-            </button>
+            
+            <!-- Search Bar (Previously Add Button was here) -->
+            <div class="search-bar">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="search-input" placeholder="Search by title or creator...">
+            </div>
           </div>
         </section>
 
