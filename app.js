@@ -8,7 +8,7 @@
 // ==========================================================================
 let state = {
   items: [],
-  theme: 'dark-theme',
+  theme: 'light-theme',
   filters: {
     search: '',
     type: 'all', // 'all' | 'book' | 'drama'
