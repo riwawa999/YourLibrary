@@ -1,7 +1,7 @@
 /**
  * YourLibrary - Core Application Logic (English Version)
  * State management, LocalStorage, CRUD operations, Search, Sort, Filters, and Theme toggles.
- * Supports multi-view SPA routing (Dashboard, Category-specific pages, Settings).
+ * Supports multi-view SPA routing and customizable item languages.
  */
 
 // ==========================================================================
@@ -10,11 +10,13 @@
 let state = {
   items: [],
   categories: ["Books", "Dramas", "Mangas", "Animes"], // Default categories
+  languages: ["Japanese", "English", "Korean", "Chinese"], // Default languages
   theme: 'light-theme',
   currentView: 'dashboard', // 'dashboard' | 'settings' | categoryName (e.g. 'Books')
   filters: {
     search: '',
     status: 'all', // 'all' | 'planning' | 'reading' | 'completed'
+    language: 'all', // 'all' | any language name
     sortBy: 'newest' // 'newest' | 'oldest' | 'rating-desc' | 'rating-asc' | 'title'
   }
 };
@@ -49,6 +51,7 @@ const DOM = {
   addBtnText: document.getElementById('add-btn-text'),
   searchInput: document.getElementById('search-input'),
   statusFilter: document.getElementById('status-filter'),
+  languageFilter: document.getElementById('language-filter'),
   sortSelector: document.getElementById('sort-selector'),
   addItemBtn: document.getElementById('add-item-btn'),
   emptyAddBtn: document.getElementById('empty-add-btn'),
@@ -74,6 +77,9 @@ const DOM = {
   formCreator: document.getElementById('form-creator'),
   creatorLabel: document.getElementById('creator-label'),
   formStatus: document.getElementById('form-status'),
+  formLanguage: document.getElementById('form-language'),
+  customLanguageGroup: document.getElementById('custom-language-group'),
+  formCustomLanguage: document.getElementById('form-custom-language'),
   formCover: document.getElementById('form-cover'),
   formStartDate: document.getElementById('form-start-date'),
   formEndDate: document.getElementById('form-end-date'),
@@ -149,6 +155,16 @@ function loadData() {
     }
   }
 
+  // Load Languages
+  const savedLanguages = localStorage.getItem('yl_languages');
+  if (savedLanguages) {
+    try {
+      state.languages = JSON.parse(savedLanguages);
+    } catch (e) {
+      console.error('Failed to parse languages, resetting to defaults.', e);
+    }
+  }
+
   // Load Items
   const savedItems = localStorage.getItem('yl_items');
   if (savedItems) {
@@ -158,6 +174,14 @@ function loadData() {
       state.items = items.map(item => {
         if (item.type === 'book') item.type = 'Books';
         if (item.type === 'drama') item.type = 'Dramas';
+        
+        // Language fallback migration
+        if (!item.language) {
+          if (item.title === 'Norwegian Wood') item.language = 'Japanese';
+          else if (item.title === 'Stranger Things') item.language = 'English';
+          else if (item.title === 'The Three-Body Problem') item.language = 'Chinese';
+          else item.language = 'English';
+        }
         return item;
       });
 
@@ -166,8 +190,12 @@ function loadData() {
         if (item.type && !state.categories.includes(item.type)) {
           state.categories.push(item.type);
         }
+        if (item.language && !state.languages.includes(item.language)) {
+          state.languages.push(item.language);
+        }
       });
       saveCategories();
+      saveLanguages();
     } catch (e) {
       console.error('Failed to parse items from local storage', e);
       state.items = [];
@@ -188,6 +216,10 @@ function saveCategories() {
   localStorage.setItem('yl_categories', JSON.stringify(state.categories));
 }
 
+function saveLanguages() {
+  localStorage.setItem('yl_languages', JSON.stringify(state.languages));
+}
+
 // ==========================================================================
 // SPA ROUTER / VIEW ENGINE
 // ==========================================================================
@@ -199,6 +231,16 @@ function navigate(view) {
   DOM.viewDashboard.classList.add('hidden');
   DOM.viewLibrary.classList.add('hidden');
   DOM.viewSettings.classList.add('hidden');
+
+  // Reset filters when switching pages
+  state.filters.search = '';
+  state.filters.status = 'all';
+  state.filters.language = 'all';
+  state.filters.sortBy = 'newest';
+  
+  if (DOM.searchInput) DOM.searchInput.value = '';
+  if (DOM.statusFilter) DOM.statusFilter.value = 'all';
+  if (DOM.sortSelector) DOM.sortSelector.value = 'newest';
 
   // Show active view container and trigger renderer
   if (view === 'dashboard') {
@@ -241,6 +283,11 @@ function setupEventListeners() {
     renderList();
   });
 
+  DOM.languageFilter.addEventListener('change', (e) => {
+    state.filters.language = e.target.value;
+    renderList();
+  });
+
   DOM.sortSelector.addEventListener('change', (e) => {
     state.filters.sortBy = e.target.value;
     renderList();
@@ -259,6 +306,9 @@ function setupEventListeners() {
 
   // Category change within modal form
   DOM.formType.addEventListener('change', updateCreatorLabel);
+
+  // Language selection change within modal form (triggers custom input display)
+  DOM.formLanguage.addEventListener('change', handleFormLanguageChange);
 
   // Form Submission
   DOM.itemForm.addEventListener('submit', handleFormSubmit);
@@ -428,7 +478,7 @@ function renderDashboard() {
 function renderLibraryPage(categoryName) {
   DOM.libraryTitle.textContent = `${categoryName} Collection`;
   DOM.librarySubtitle.textContent = `Manage and track your ${categoryName.toLowerCase()} logs.`;
-  DOM.addBtnText.textContent = `Add ${categoryName.replace(/s$/, '')}`; // Singular title e.g. "Add Book"
+  DOM.addBtnText.textContent = `Add ${categoryName.replace(/s$/, '')}`; // Singular e.g. "Add Book"
 
   // Render Category stats cards
   DOM.categoryStatsSection.innerHTML = '';
@@ -497,6 +547,9 @@ function renderLibraryPage(categoryName) {
     </div>
   `;
   DOM.categoryStatsSection.appendChild(catRatingCard);
+
+  // Dynamically populate Language Filter dropdown
+  populateLanguageFilter();
 
   // Render list of items
   renderList();
@@ -597,6 +650,30 @@ function handleDeleteCategory(categoryName) {
 }
 
 // ==========================================================================
+// LANGUAGE FILTER POPULATER
+// ==========================================================================
+function populateLanguageFilter() {
+  DOM.languageFilter.innerHTML = '';
+  
+  // All languages option
+  const optAll = document.createElement('option');
+  optAll.value = 'all';
+  optAll.textContent = 'All Languages';
+  DOM.languageFilter.appendChild(optAll);
+
+  // Dynamic language options
+  state.languages.forEach(lang => {
+    const opt = document.createElement('option');
+    opt.value = lang;
+    opt.textContent = lang;
+    DOM.languageFilter.appendChild(opt);
+  });
+
+  // Retain selected filter value
+  DOM.languageFilter.value = state.filters.language;
+}
+
+// ==========================================================================
 // RENDER ITEMS LIST (GRID VIEW FILTERED FOR LIBRARY PAGE)
 // ==========================================================================
 function renderList() {
@@ -604,7 +681,7 @@ function renderList() {
 
   const activeCategory = state.currentView;
 
-  // Filter items matching active category + search query + status filters
+  // Filter items matching active category + search query + status + language filters
   let filteredItems = state.items.filter(item => {
     // 1. Match current view category
     const typeMatch = item.type === activeCategory;
@@ -616,8 +693,11 @@ function renderList() {
       
     // 3. Status Filter
     const statusMatch = state.filters.status === 'all' || item.status === state.filters.status;
+
+    // 4. Language Filter
+    const langMatch = state.filters.language === 'all' || item.language === state.filters.language;
     
-    return typeMatch && searchMatch && statusMatch;
+    return typeMatch && searchMatch && statusMatch && langMatch;
   });
 
   // Apply Sorting
@@ -745,6 +825,7 @@ function createCard(item) {
       ${coverHtml}
       <div class="card-badge-container">
         <span class="badge ${hasTypeClass}" style="${typeBadgeStyle}">${escapeHtml(typeBadgeText)}</span>
+        <span class="badge badge-language">${escapeHtml(item.language || 'English')}</span>
         <span class="badge badge-status ${item.status}">${statusBadgeText}</span>
       </div>
     </div>
@@ -770,8 +851,9 @@ function exportLibrary() {
   }
   
   const exportData = {
-    version: 2,
+    version: 3,
     categories: state.categories,
+    languages: state.languages,
     items: state.items
   };
   
@@ -801,14 +883,17 @@ function handleImportFile(e) {
       
       let importedItems = [];
       let importedCategories = [];
+      let importedLanguages = [];
 
-      // Detect schema format
+      // Detect schema format version
       if (Array.isArray(importedJson)) {
         importedItems = importedJson;
         importedCategories = ["Books", "Dramas", "Mangas", "Animes"];
+        importedLanguages = ["Japanese", "English", "Korean", "Chinese"];
       } else if (importedJson && typeof importedJson === 'object' && importedJson.items) {
         importedItems = importedJson.items;
         importedCategories = importedJson.categories || [];
+        importedLanguages = importedJson.languages || ["Japanese", "English", "Korean", "Chinese"];
       } else {
         throw new Error('Invalid JSON format');
       }
@@ -822,10 +907,12 @@ function handleImportFile(e) {
       }
 
       if (confirm(`Do you want to import ${validatedItems.length} records? They will be merged with your current library.`)) {
-        // Merge categories list
-        const mergedCategories = Array.from(new Set([...state.categories, ...importedCategories]));
-        state.categories = mergedCategories;
+        // Merge categories & languages lists
+        state.categories = Array.from(new Set([...state.categories, ...importedCategories]));
         saveCategories();
+
+        state.languages = Array.from(new Set([...state.languages, ...importedLanguages]));
+        saveLanguages();
 
         // Avoid ID collisions
         const existingIds = new Set(state.items.map(item => item.id));
@@ -843,6 +930,7 @@ function handleImportFile(e) {
             title: item.title,
             type: type || '',
             creator: item.creator,
+            language: item.language || 'English',
             status: ['planning', 'reading', 'completed'].includes(item.status) ? item.status : 'planning',
             rating: typeof item.rating === 'number' && item.rating >= 0 && item.rating <= 5 ? item.rating : 0,
             coverUrl: item.coverUrl || '',
@@ -913,7 +1001,7 @@ function getCategoryGradient(categoryName) {
   return colors[index];
 }
 
-// English Toast Generator
+// Notification Toast Generator
 function showToast(message, type = 'success') {
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
@@ -939,6 +1027,47 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
+// ==========================================================================
+// FORM LANGUAGES LOGIC
+// ==========================================================================
+function populateLanguageSelect(selectedVal = null) {
+  DOM.formLanguage.innerHTML = '';
+
+  state.languages.forEach(lang => {
+    const opt = document.createElement('option');
+    opt.value = lang;
+    opt.textContent = lang;
+    DOM.formLanguage.appendChild(opt);
+  });
+
+  // Option to add custom languages
+  const optCustom = document.createElement('option');
+  optCustom.value = '_custom_';
+  optCustom.textContent = '[ Add Custom Language... ]';
+  DOM.formLanguage.appendChild(optCustom);
+
+  // Set selected value
+  if (selectedVal) {
+    DOM.formLanguage.value = selectedVal;
+  }
+}
+
+function handleFormLanguageChange() {
+  const val = DOM.formLanguage.value;
+  if (val === '_custom_') {
+    DOM.customLanguageGroup.style.display = 'flex';
+    DOM.formCustomLanguage.required = true;
+    DOM.formCustomLanguage.focus();
+  } else {
+    DOM.customLanguageGroup.style.display = 'none';
+    DOM.formCustomLanguage.required = false;
+    DOM.formCustomLanguage.value = '';
+  }
+}
+
+// ==========================================================================
+// MODAL POPULATION
+// ==========================================================================
 function populateCategorySelect() {
   DOM.formType.innerHTML = '';
   
@@ -958,25 +1087,18 @@ function populateCategorySelect() {
   });
 }
 
-function updateCreatorLabel() {
-  const type = DOM.formType.value.toLowerCase();
-  
-  if (type.includes('book') || type.includes('manga') || type.includes('novel')) {
-    DOM.creatorLabel.innerHTML = 'Author <span class="required">*</span>';
-    DOM.formCreator.placeholder = 'e.g., Haruki Murakami, Keigo Higashino';
-  } else if (type.includes('drama') || type.includes('anime') || type.includes('movie') || type.includes('show')) {
-    DOM.creatorLabel.innerHTML = 'Director / Studio <span class="required">*</span>';
-    DOM.formCreator.placeholder = 'e.g., Studio Ghibli, David Fincher';
-  } else {
-    DOM.creatorLabel.innerHTML = 'Creator / Artist <span class="required">*</span>';
-    DOM.formCreator.placeholder = 'e.g., Name of the creator';
-  }
-}
-
-// Pre-fills category selectors dynamically inside modal creation
 function openModal(item = null) {
   DOM.itemForm.reset();
+  
   populateCategorySelect();
+  
+  // Pre-fill Language lists
+  const defaultLang = item ? item.language : 'Japanese';
+  populateLanguageSelect(defaultLang);
+  
+  // Hide custom language block by default
+  DOM.customLanguageGroup.style.display = 'none';
+  DOM.formCustomLanguage.required = false;
 
   if (item) {
     // Edit mode
@@ -1002,7 +1124,7 @@ function openModal(item = null) {
     DOM.formId.value = '';
     DOM.formDeleteBtn.style.display = 'none';
 
-    // Contextual Pre-fill based on active view
+    // Contextual Pre-fill category
     if (state.currentView !== 'dashboard' && state.currentView !== 'settings') {
       DOM.formType.value = state.currentView;
     }
@@ -1018,6 +1140,120 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
+function handleFormSubmit(e) {
+  e.preventDefault();
+  
+  const id = DOM.formId.value;
+  const title = DOM.formTitle.value.trim();
+  const type = DOM.formType.value;
+  const creator = DOM.formCreator.value.trim();
+  const status = DOM.formStatus.value;
+  const coverUrl = DOM.formCover.value.trim();
+  const startDate = DOM.formStartDate.value;
+  const endDate = DOM.formEndDate.value;
+  const notes = DOM.formNotes.value.trim();
+  
+  let language = DOM.formLanguage.value;
+
+  // Handle Custom Language Selection
+  if (language === '_custom_') {
+    const customName = DOM.formCustomLanguage.value.trim();
+    if (!customName) {
+      showToast('Please type a custom language name.', 'error');
+      return;
+    }
+    // Capitalize language name
+    const formattedLang = customName.charAt(0).toUpperCase() + customName.slice(1).toLowerCase();
+    
+    // Check if it already exists
+    const duplicate = state.languages.some(lang => lang.toLowerCase() === formattedLang.toLowerCase());
+    if (!duplicate) {
+      state.languages.push(formattedLang);
+      saveLanguages();
+    }
+    language = formattedLang;
+  }
+
+  // Get rating value
+  let rating = 0;
+  const checkedRating = document.querySelector('input[name="rating"]:checked');
+  if (checkedRating) {
+    rating = parseInt(checkedRating.value, 10);
+  }
+
+  // Basic Validation
+  if (!title || !creator) {
+    showToast('Title and Creator fields are required.', 'error');
+    return;
+  }
+  
+  if (!type) {
+    showToast('Please select or add a category first.', 'error');
+    return;
+  }
+  
+  if (id) {
+    // Edit existing item
+    const index = state.items.findIndex(item => item.id === id);
+    if (index !== -1) {
+      state.items[index] = {
+        ...state.items[index],
+        title,
+        type,
+        creator,
+        status,
+        language,
+        rating,
+        coverUrl,
+        startDate,
+        endDate,
+        notes
+      };
+      showToast('Record updated successfully!', 'success');
+    }
+  } else {
+    // Add new item
+    const newItem = {
+      id: Date.now().toString(),
+      title,
+      type,
+      creator,
+      status,
+      language,
+      rating,
+      coverUrl,
+      startDate,
+      endDate,
+      notes,
+      createdAt: new Date().toISOString()
+    };
+    state.items.unshift(newItem); // Add to the front
+    showToast('Record added successfully!', 'success');
+  }
+  
+  saveItems();
+  closeModal();
+  
+  // Refresh layout
+  navigate(state.currentView);
+}
+
+function handleDeleteItem() {
+  const id = DOM.formId.value;
+  if (!id) return;
+  
+  if (confirm('Are you sure you want to delete this record?')) {
+    state.items = state.items.filter(item => item.id !== id);
+    saveItems();
+    closeModal();
+    navigate(state.currentView);
+    showToast('Record deleted.', 'info');
+  }
+}
+
+// ==========================================================================
+// MOCK DATA GENERATOR (English version)
+// ==========================================================================
 function getMockItems() {
   return [
     {
@@ -1025,6 +1261,7 @@ function getMockItems() {
       title: 'Norwegian Wood',
       type: 'Books',
       creator: 'Haruki Murakami',
+      language: 'Japanese',
       status: 'completed',
       rating: 5,
       coverUrl: '',
@@ -1038,6 +1275,7 @@ function getMockItems() {
       title: 'Stranger Things',
       type: 'Dramas',
       creator: 'The Duffer Brothers',
+      language: 'English',
       status: 'reading',
       rating: 4,
       coverUrl: '',
@@ -1051,6 +1289,7 @@ function getMockItems() {
       title: 'The Three-Body Problem',
       type: 'Books',
       creator: 'Cixin Liu',
+      language: 'Chinese',
       status: 'planning',
       rating: 0,
       coverUrl: '',
