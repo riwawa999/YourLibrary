@@ -1,7 +1,7 @@
 /**
  * YourLibrary - Core Application Logic (English Version)
  * State management, LocalStorage, CRUD operations, Search, Sort, Filters, and Theme toggles.
- * Now supports dynamic categories managed via a top-left hamburger sidebar menu.
+ * Supports multi-view SPA routing (Dashboard, Category-specific pages, Settings).
  */
 
 // ==========================================================================
@@ -11,9 +11,9 @@ let state = {
   items: [],
   categories: ["Books", "Dramas", "Mangas", "Animes"], // Default categories
   theme: 'light-theme',
+  currentView: 'dashboard', // 'dashboard' | 'settings' | categoryName (e.g. 'Books')
   filters: {
     search: '',
-    type: 'all', // 'all' | any custom category name
     status: 'all', // 'all' | 'planning' | 'reading' | 'completed'
     sortBy: 'newest' // 'newest' | 'oldest' | 'rating-desc' | 'rating-asc' | 'title'
   }
@@ -30,30 +30,38 @@ const DOM = {
   sidebarOverlay: document.getElementById('sidebar-overlay'),
   sidebarCloseBtn: document.getElementById('sidebar-close-btn'),
   
-  // Category Form & List
-  addCategoryForm: document.getElementById('add-category-form'),
-  newCategoryInput: document.getElementById('new-category-input'),
-  categoriesList: document.getElementById('categories-list'),
-  
-  // Actions
-  exportBtn: document.getElementById('export-btn'),
-  importBtn: document.getElementById('import-btn'),
-  importFileInput: document.getElementById('import-file-input'),
+  // Sidebar Nav Link Container
+  sidebarNav: document.getElementById('sidebar-nav'),
 
-  // Stats & Tabs Containers
+  // Views Toggles
+  viewDashboard: document.getElementById('view-dashboard'),
+  viewLibrary: document.getElementById('view-library'),
+  viewSettings: document.getElementById('view-settings'),
+
+  // Dashboard View Elements
   statsSection: document.getElementById('stats-section'),
-  filterTabs: document.getElementById('filter-tabs'),
+  recentGrid: document.getElementById('recent-grid'),
 
-  // Controls
+  // Category View Elements
+  libraryTitle: document.getElementById('library-title'),
+  librarySubtitle: document.getElementById('library-subtitle'),
+  categoryStatsSection: document.getElementById('category-stats-section'),
+  addBtnText: document.getElementById('add-btn-text'),
   searchInput: document.getElementById('search-input'),
   statusFilter: document.getElementById('status-filter'),
   sortSelector: document.getElementById('sort-selector'),
   addItemBtn: document.getElementById('add-item-btn'),
   emptyAddBtn: document.getElementById('empty-add-btn'),
-
-  // Grid & States
   itemsGrid: document.getElementById('items-grid'),
   emptyState: document.getElementById('empty-state'),
+
+  // Settings View Elements
+  addCategoryForm: document.getElementById('add-category-form'),
+  newCategoryInput: document.getElementById('new-category-input'),
+  categoriesList: document.getElementById('categories-list'),
+  settingsExportBtn: document.getElementById('settings-export-btn'),
+  settingsImportBtn: document.getElementById('settings-import-btn'),
+  importFileInput: document.getElementById('import-file-input'),
 
   // Modal & Form
   itemModal: document.getElementById('item-modal'),
@@ -84,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadData();
   setupEventListeners();
   applyTheme();
-  renderApp();
+  navigate(state.currentView);
 });
 
 // ==========================================================================
@@ -114,7 +122,7 @@ function toggleSidebar(open = true) {
   if (open) {
     DOM.sidebarMenu.classList.add('active');
     DOM.sidebarOverlay.classList.add('active');
-    renderSidebarCategories();
+    renderSidebarNav();
   } else {
     DOM.sidebarMenu.classList.remove('active');
     DOM.sidebarOverlay.classList.remove('active');
@@ -122,7 +130,7 @@ function toggleSidebar(open = true) {
 }
 
 // ==========================================================================
-// DATA PERSISTENCE, MIGRATION & STATE SYNC
+// DATA PERSISTENCE & MIGRATION
 // ==========================================================================
 function loadData() {
   // Load Theme
@@ -146,14 +154,14 @@ function loadData() {
   if (savedItems) {
     try {
       let items = JSON.parse(savedItems);
-      // Data Migration: Translate old static 'book' / 'drama' string types to dynamic categories
+      // Migration: Convert legacy book/drama types to capitalized categories
       state.items = items.map(item => {
         if (item.type === 'book') item.type = 'Books';
         if (item.type === 'drama') item.type = 'Dramas';
         return item;
       });
-      
-      // Ensure mapped categories exist in the list
+
+      // Ensure loaded categories are present
       state.items.forEach(item => {
         if (item.type && !state.categories.includes(item.type)) {
           state.categories.push(item.type);
@@ -163,10 +171,10 @@ function loadData() {
     } catch (e) {
       console.error('Failed to parse items from local storage', e);
       state.items = [];
-      showToast('Failed to load library data. Resetting database.', 'error');
+      showToast('Failed to load library database.', 'error');
     }
   } else {
-    // Insert mock data if empty for a warm welcome
+    // Insert mock data if empty
     state.items = getMockItems();
     saveItems();
   }
@@ -181,19 +189,48 @@ function saveCategories() {
 }
 
 // ==========================================================================
+// SPA ROUTER / VIEW ENGINE
+// ==========================================================================
+function navigate(view) {
+  state.currentView = view;
+  toggleSidebar(false); // Close sidebar after clicking
+
+  // Hide all view containers
+  DOM.viewDashboard.classList.add('hidden');
+  DOM.viewLibrary.classList.add('hidden');
+  DOM.viewSettings.classList.add('hidden');
+
+  // Show active view container and trigger renderer
+  if (view === 'dashboard') {
+    DOM.viewDashboard.classList.remove('hidden');
+    renderDashboard();
+  } else if (view === 'settings') {
+    DOM.viewSettings.classList.remove('hidden');
+    renderSettingsPage();
+  } else {
+    // Library View (Category specific)
+    DOM.viewLibrary.classList.remove('hidden');
+    renderLibraryPage(view);
+  }
+
+  // Refresh sidebar nav state
+  renderSidebarNav();
+}
+
+// ==========================================================================
 // EVENT LISTENERS SETUP
 // ==========================================================================
 function setupEventListeners() {
-  // Theme & Sidebar Toggles
+  // Sidebar Toggles
   DOM.themeToggleBtn.addEventListener('click', toggleTheme);
   DOM.menuToggleBtn.addEventListener('click', () => toggleSidebar(true));
   DOM.sidebarCloseBtn.addEventListener('click', () => toggleSidebar(false));
   DOM.sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
 
-  // Category Add Form Submit
+  // Category Add Form Submit (inside settings page)
   DOM.addCategoryForm.addEventListener('submit', handleAddCategory);
 
-  // Search & Filter Inputs
+  // Search & Filter Inputs (inside library page)
   DOM.searchInput.addEventListener('input', (e) => {
     state.filters.search = e.target.value.trim();
     renderList();
@@ -220,7 +257,7 @@ function setupEventListeners() {
     if (e.target === DOM.itemModal) closeModal();
   });
 
-  // Category change within form (updates Creator Label & placeholder hints)
+  // Category change within modal form
   DOM.formType.addEventListener('change', updateCreatorLabel);
 
   // Form Submission
@@ -229,294 +266,79 @@ function setupEventListeners() {
   // Delete Action in Form
   DOM.formDeleteBtn.addEventListener('click', handleDeleteItem);
 
-  // Export Data
-  DOM.exportBtn.addEventListener('click', exportLibrary);
-
-  // Import Data Trigger
-  DOM.importBtn.addEventListener('click', () => DOM.importFileInput.click());
+  // Export & Import Database Bindings (in Settings View)
+  DOM.settingsExportBtn.addEventListener('click', exportLibrary);
+  DOM.settingsImportBtn.addEventListener('click', () => DOM.importFileInput.click());
   DOM.importFileInput.addEventListener('change', handleImportFile);
 }
 
 // ==========================================================================
-// CATEGORY CRUD LOGIC
+// RENDER COMPONENT: SIDEBAR NAVIGATION
 // ==========================================================================
-function handleAddCategory(e) {
-  e.preventDefault();
-  const name = DOM.newCategoryInput.value.trim();
-  if (!name) return;
+function renderSidebarNav() {
+  DOM.sidebarNav.innerHTML = '';
 
-  // Case-insensitive check
-  const duplicate = state.categories.some(cat => cat.toLowerCase() === name.toLowerCase());
-  if (duplicate) {
-    showToast('Category already exists!', 'error');
-    return;
+  // 1. Dashboard Nav Link
+  const dashLink = document.createElement('button');
+  dashLink.className = `sidebar-nav-item ${state.currentView === 'dashboard' ? 'active' : ''}`;
+  dashLink.innerHTML = `<i class="fa-solid fa-chart-simple"></i> <span>Dashboard</span>`;
+  dashLink.addEventListener('click', () => navigate('dashboard'));
+  DOM.sidebarNav.appendChild(dashLink);
+
+  // 2. Divider label
+  if (state.categories.length > 0) {
+    const divider = document.createElement('div');
+    divider.className = 'section-desc';
+    divider.style.margin = '1rem 0 0.5rem 1rem';
+    divider.style.fontWeight = '700';
+    divider.style.textTransform = 'uppercase';
+    divider.style.letterSpacing = '0.05em';
+    divider.textContent = 'Collections';
+    DOM.sidebarNav.appendChild(divider);
   }
 
-  // Capitalize name cleanly
-  const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
-  state.categories.push(formattedName);
-  saveCategories();
-  
-  DOM.newCategoryInput.value = '';
-  renderSidebarCategories();
-  renderApp();
-  showToast(`Added category: ${formattedName}`, 'success');
-}
-
-function handleDeleteCategory(categoryName) {
-  const count = state.items.filter(item => item.type === categoryName).length;
-  let confirmMsg = `Are you sure you want to delete "${categoryName}"?`;
-  
-  if (count > 0) {
-    confirmMsg = `There are ${count} items cataloged under "${categoryName}". Deleting it will keep the items, but unassign their category. Proceed?`;
-  }
-
-  if (confirm(confirmMsg)) {
-    // Remove from categories list
-    state.categories = state.categories.filter(cat => cat !== categoryName);
-    saveCategories();
-
-    // Clean deleted category reference in items
-    state.items = state.items.map(item => {
-      if (item.type === categoryName) {
-        item.type = ''; // Clear category assignment
-      }
-      return item;
-    });
-    saveItems();
-
-    // Reset filter tab if it was selected
-    if (state.filters.type === categoryName) {
-      state.filters.type = 'all';
-    }
-
-    renderSidebarCategories();
-    renderApp();
-    showToast(`Deleted category: ${categoryName}`, 'info');
-  }
-}
-
-// ==========================================================================
-// MODAL & FORM LOGIC
-// ==========================================================================
-function openModal(item = null) {
-  DOM.itemForm.reset();
-  
-  // Populate Category options dropdown dynamically
-  populateCategorySelect();
-
-  if (item) {
-    // Edit Mode
-    DOM.modalTitle.textContent = 'Edit Record';
-    DOM.formId.value = item.id;
-    DOM.formTitle.value = item.title;
-    DOM.formType.value = item.type || '';
-    DOM.formCreator.value = item.creator;
-    DOM.formStatus.value = item.status;
-    DOM.formCover.value = item.coverUrl || '';
-    DOM.formStartDate.value = item.startDate || '';
-    DOM.formEndDate.value = item.endDate || '';
-    DOM.formNotes.value = item.notes || '';
-    
-    // Set Star Rating
-    if (item.rating) {
-      const radio = document.getElementById(`star${item.rating}`);
-      if (radio) radio.checked = true;
-    }
-    
-    DOM.formDeleteBtn.style.display = 'inline-flex';
-  } else {
-    // Add Mode
-    DOM.modalTitle.textContent = 'Add to Library';
-    DOM.formId.value = '';
-    DOM.formDeleteBtn.style.display = 'none';
-  }
-  
-  updateCreatorLabel();
-  DOM.itemModal.classList.add('active');
-  document.body.style.overflow = 'hidden'; // Lock background scrolling
-}
-
-function closeModal() {
-  DOM.itemModal.classList.remove('active');
-  document.body.style.overflow = ''; // Unlock scrolling
-}
-
-function populateCategorySelect() {
-  DOM.formType.innerHTML = '';
-  
-  if (state.categories.length === 0) {
-    const opt = document.createElement('option');
-    opt.value = '';
-    opt.textContent = '(Create a category first)';
-    DOM.formType.appendChild(opt);
-    return;
-  }
-
+  // 3. Category dynamic links
   state.categories.forEach(category => {
-    const opt = document.createElement('option');
-    opt.value = category;
-    opt.textContent = category;
-    DOM.formType.appendChild(opt);
-  });
-}
+    const catLink = document.createElement('button');
+    catLink.className = `sidebar-nav-item ${state.currentView === category ? 'active' : ''}`;
+    
+    // Select icon
+    let iconClass = 'fa-solid fa-tag';
+    const lower = category.toLowerCase();
+    if (lower.includes('book')) iconClass = 'fa-solid fa-book-open';
+    if (lower.includes('drama') || lower.includes('show') || lower.includes('movie')) iconClass = 'fa-solid fa-video';
+    if (lower.includes('manga') || lower.includes('comic')) iconClass = 'fa-solid fa-book';
+    if (lower.includes('anime')) iconClass = 'fa-solid fa-tv';
 
-function updateCreatorLabel() {
-  const type = DOM.formType.value.toLowerCase();
-  
-  if (type.includes('book') || type.includes('manga') || type.includes('novel')) {
-    DOM.creatorLabel.innerHTML = 'Author <span class="required">*</span>';
-    DOM.formCreator.placeholder = 'e.g., Haruki Murakami, Keigo Higashino';
-  } else if (type.includes('drama') || type.includes('anime') || type.includes('movie') || type.includes('show')) {
-    DOM.creatorLabel.innerHTML = 'Director / Studio <span class="required">*</span>';
-    DOM.formCreator.placeholder = 'e.g., Studio Ghibli, David Fincher';
-  } else {
-    DOM.creatorLabel.innerHTML = 'Creator / Artist <span class="required">*</span>';
-    DOM.formCreator.placeholder = 'e.g., Name of the creator';
-  }
-}
-
-function handleFormSubmit(e) {
-  e.preventDefault();
-  
-  const id = DOM.formId.value;
-  const title = DOM.formTitle.value.trim();
-  const type = DOM.formType.value;
-  const creator = DOM.formCreator.value.trim();
-  const status = DOM.formStatus.value;
-  const coverUrl = DOM.formCover.value.trim();
-  const startDate = DOM.formStartDate.value;
-  const endDate = DOM.formEndDate.value;
-  const notes = DOM.formNotes.value.trim();
-  
-  // Get rating value
-  let rating = 0;
-  const checkedRating = document.querySelector('input[name="rating"]:checked');
-  if (checkedRating) {
-    rating = parseInt(checkedRating.value, 10);
-  }
-
-  // Basic Validation
-  if (!title || !creator) {
-    showToast('Title and Creator fields are required.', 'error');
-    return;
-  }
-  
-  if (!type) {
-    showToast('Please select or add a category first.', 'error');
-    return;
-  }
-  
-  if (id) {
-    // Edit existing item
-    const index = state.items.findIndex(item => item.id === id);
-    if (index !== -1) {
-      state.items[index] = {
-        ...state.items[index],
-        title,
-        type,
-        creator,
-        status,
-        rating,
-        coverUrl,
-        startDate,
-        endDate,
-        notes
-      };
-      showToast('Record updated successfully!', 'success');
-    }
-  } else {
-    // Add new item
-    const newItem = {
-      id: Date.now().toString(),
-      title,
-      type,
-      creator,
-      status,
-      rating,
-      coverUrl,
-      startDate,
-      endDate,
-      notes,
-      createdAt: new Date().toISOString()
-    };
-    state.items.unshift(newItem); // Add to the front
-    showToast('Record added successfully!', 'success');
-  }
-  
-  saveItems();
-  closeModal();
-  renderApp();
-}
-
-function handleDeleteItem() {
-  const id = DOM.formId.value;
-  if (!id) return;
-  
-  if (confirm('Are you sure you want to delete this record?')) {
-    state.items = state.items.filter(item => item.id !== id);
-    saveItems();
-    closeModal();
-    renderApp();
-    showToast('Record deleted.', 'info');
-  }
-}
-
-// ==========================================================================
-// RENDER METHODS (UI UPDATES)
-// ==========================================================================
-function renderApp() {
-  renderSidebarCategories();
-  renderStats();
-  renderFilterTabs();
-  renderList();
-}
-
-function renderSidebarCategories() {
-  DOM.categoriesList.innerHTML = '';
-  
-  if (state.categories.length === 0) {
-    const li = document.createElement('li');
-    li.className = 'section-desc';
-    li.style.textAlign = 'center';
-    li.textContent = 'No categories found. Create one above.';
-    DOM.categoriesList.appendChild(li);
-    return;
-  }
-
-  state.categories.forEach(category => {
-    const li = document.createElement('li');
-    li.className = 'category-item';
-
-    // Generate color indicator based on category hash
     const colors = getCategoryGradient(category);
-    
-    li.innerHTML = `
-      <div class="category-name-wrapper">
-        <span class="category-dot" style="background: linear-gradient(135deg, ${colors[0]}, ${colors[1]});"></span>
-        <span>${escapeHtml(category)}</span>
-      </div>
-      <button class="category-delete-btn" title="Delete Category">
-        <i class="fa-solid fa-trash-can"></i>
-      </button>
+
+    catLink.innerHTML = `
+      <i class="${iconClass}"></i>
+      <span>${escapeHtml(category)}</span>
+      <span class="category-dot" style="background: linear-gradient(135deg, ${colors[0]}, ${colors[1]}); margin-left: auto;"></span>
     `;
-
-    // Hook delete button click handler
-    li.querySelector('.category-delete-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      handleDeleteCategory(category);
-    });
-
-    DOM.categoriesList.appendChild(li);
+    catLink.addEventListener('click', () => navigate(category));
+    DOM.sidebarNav.appendChild(catLink);
   });
+
+  // 4. Settings link
+  const setLink = document.createElement('button');
+  setLink.className = `sidebar-nav-item ${state.currentView === 'settings' ? 'active' : ''}`;
+  setLink.style.marginTop = 'auto'; // push settings to bottom
+  setLink.innerHTML = `<i class="fa-solid fa-gear"></i> <span>Settings</span>`;
+  setLink.addEventListener('click', () => navigate('settings'));
+  DOM.sidebarNav.appendChild(setLink);
 }
 
-function renderStats() {
+// ==========================================================================
+// RENDER COMPONENT: DASHBOARD VIEW
+// ==========================================================================
+function renderDashboard() {
   DOM.statsSection.innerHTML = '';
 
   const total = state.items.length;
   
-  // Create static Total Card
+  // Total Items Card
   const totalCard = document.createElement('div');
   totalCard.className = 'stat-card';
   totalCard.innerHTML = `
@@ -530,25 +352,21 @@ function renderStats() {
   `;
   DOM.statsSection.appendChild(totalCard);
 
-  // Generate dynamic category stats (first 2 categories by default to fit the 4-column layout nicely)
-  // Or sort by count and pick top 2 categories
+  // Stats for the top 2 categories (by item count)
   const categoryCounts = state.categories.map(cat => {
     return {
       name: cat,
       count: state.items.filter(i => i.type === cat).length
     };
   });
-
-  // Sort by count descending, display top 2
   categoryCounts.sort((a, b) => b.count - a.count);
   const topCategories = categoryCounts.slice(0, 2);
 
-  topCategories.forEach((catObj, index) => {
+  topCategories.forEach(catObj => {
     const card = document.createElement('div');
     card.className = 'stat-card';
     const grad = getCategoryGradient(catObj.name);
     
-    // Choose icon based on common keywords
     let iconClass = 'fa-solid fa-bookmark';
     const lowerName = catObj.name.toLowerCase();
     if (lowerName.includes('book')) iconClass = 'fa-solid fa-book';
@@ -568,7 +386,7 @@ function renderStats() {
     DOM.statsSection.appendChild(card);
   });
 
-  // Create static Avg Rating Card
+  // Average Rating Card
   const ratedItems = state.items.filter(i => i.rating > 0);
   const avgRating = ratedItems.length > 0
     ? (ratedItems.reduce((acc, curr) => acc + curr.rating, 0) / ratedItems.length).toFixed(1)
@@ -586,62 +404,220 @@ function renderStats() {
     </div>
   `;
   DOM.statsSection.appendChild(ratingCard);
+
+  // Render "Recent Logs" list (newest 4 items)
+  DOM.recentGrid.innerHTML = '';
+  const recentItems = [...state.items].slice(0, 4);
+
+  if (recentItems.length === 0) {
+    DOM.recentGrid.innerHTML = `
+      <div class="empty-state" style="display: flex; grid-column: 1/-1; padding: 2rem;">
+        <p>No logged items yet. Click any collection page in the menu to start cataloging!</p>
+      </div>
+    `;
+  } else {
+    recentItems.forEach(item => {
+      DOM.recentGrid.appendChild(createCard(item));
+    });
+  }
 }
 
-function renderFilterTabs() {
-  DOM.filterTabs.innerHTML = '';
+// ==========================================================================
+// RENDER COMPONENT: CATEGORY LIBRARY PAGE
+// ==========================================================================
+function renderLibraryPage(categoryName) {
+  DOM.libraryTitle.textContent = `${categoryName} Collection`;
+  DOM.librarySubtitle.textContent = `Manage and track your ${categoryName.toLowerCase()} logs.`;
+  DOM.addBtnText.textContent = `Add ${categoryName.replace(/s$/, '')}`; // Singular title e.g. "Add Book"
 
-  // 1. Render 'All' Tab
-  const allBtn = document.createElement('button');
-  allBtn.className = `tab-btn ${state.filters.type === 'all' ? 'active' : ''}`;
-  allBtn.dataset.type = 'all';
-  allBtn.textContent = 'All';
-  allBtn.addEventListener('click', () => handleTabClick(allBtn, 'all'));
-  DOM.filterTabs.appendChild(allBtn);
+  // Render Category stats cards
+  DOM.categoryStatsSection.innerHTML = '';
+  const categoryItems = state.items.filter(i => i.type === categoryName);
+  
+  // Total in category card
+  const catTotalCard = document.createElement('div');
+  catTotalCard.className = 'stat-card';
+  const grad = getCategoryGradient(categoryName);
+  catTotalCard.innerHTML = `
+    <div class="stat-icon" style="background-color: rgba(236, 72, 153, 0.08); color: ${grad[0]};">
+      <i class="fa-solid fa-list-ul"></i>
+    </div>
+    <div class="stat-details">
+      <span class="stat-value">${categoryItems.length}</span>
+      <span class="stat-label">Total Logged</span>
+    </div>
+  `;
+  DOM.categoryStatsSection.appendChild(catTotalCard);
 
-  // 2. Render dynamic tabs for each category
-  state.categories.forEach(category => {
-    const btn = document.createElement('button');
-    btn.className = `tab-btn ${state.filters.type === category ? 'active' : ''}`;
-    btn.dataset.type = category;
-    
-    // Choose icon
-    let iconHtml = '<i class="fa-solid fa-tag"></i> ';
-    const lower = category.toLowerCase();
-    if (lower.includes('book')) iconHtml = '<i class="fa-solid fa-book-open"></i> ';
-    if (lower.includes('drama') || lower.includes('show') || lower.includes('movie')) iconHtml = '<i class="fa-solid fa-video"></i> ';
-    if (lower.includes('manga') || lower.includes('comic')) iconHtml = '<i class="fa-solid fa-book"></i> ';
-    if (lower.includes('anime')) iconHtml = '<i class="fa-solid fa-clapperboard"></i> ';
+  // Completed in category card
+  const completedCount = categoryItems.filter(i => i.status === 'completed').length;
+  const completedCard = document.createElement('div');
+  completedCard.className = 'stat-card';
+  completedCard.innerHTML = `
+    <div class="stat-icon icon-violet" style="color: var(--color-green); background-color: rgba(16, 185, 129, 0.12);">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <div class="stat-details">
+      <span class="stat-value">${completedCount}</span>
+      <span class="stat-label">Completed</span>
+    </div>
+  `;
+  DOM.categoryStatsSection.appendChild(completedCard);
 
-    btn.innerHTML = `${iconHtml}${escapeHtml(category)}`;
-    btn.addEventListener('click', () => handleTabClick(btn, category));
-    DOM.filterTabs.appendChild(btn);
-  });
-}
+  // In Progress in category card
+  const progressCount = categoryItems.filter(i => i.status === 'reading').length;
+  const progressCard = document.createElement('div');
+  progressCard.className = 'stat-card';
+  progressCard.innerHTML = `
+    <div class="stat-icon icon-blue">
+      <i class="fa-solid fa-spinner"></i>
+    </div>
+    <div class="stat-details">
+      <span class="stat-value">${progressCount}</span>
+      <span class="stat-label">In Progress</span>
+    </div>
+  `;
+  DOM.categoryStatsSection.appendChild(progressCard);
 
-function handleTabClick(btn, type) {
-  const tabs = DOM.filterTabs.querySelectorAll('.tab-btn');
-  tabs.forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  state.filters.type = type;
+  // Avg Rating in category card
+  const catRatedItems = categoryItems.filter(i => i.rating > 0);
+  const catAvg = catRatedItems.length > 0
+    ? (catRatedItems.reduce((acc, curr) => acc + curr.rating, 0) / catRatedItems.length).toFixed(1)
+    : '0.0';
+
+  const catRatingCard = document.createElement('div');
+  catRatingCard.className = 'stat-card';
+  catRatingCard.innerHTML = `
+    <div class="stat-icon icon-amber">
+      <i class="fa-solid fa-star"></i>
+    </div>
+    <div class="stat-details">
+      <span class="stat-value">${catAvg}</span>
+      <span class="stat-label">Average Rating</span>
+    </div>
+  `;
+  DOM.categoryStatsSection.appendChild(catRatingCard);
+
+  // Render list of items
   renderList();
 }
 
+// ==========================================================================
+// RENDER COMPONENT: SETTINGS & BACKUP PAGE
+// ==========================================================================
+function renderSettingsPage() {
+  DOM.categoriesList.innerHTML = '';
+  
+  if (state.categories.length === 0) {
+    DOM.categoriesList.innerHTML = `
+      <li class="section-desc" style="text-align: center; padding: 1rem;">
+        No active categories. Create one above.
+      </li>
+    `;
+    return;
+  }
+
+  state.categories.forEach(category => {
+    const li = document.createElement('li');
+    li.className = 'category-item';
+
+    const colors = getCategoryGradient(category);
+    
+    li.innerHTML = `
+      <div class="category-name-wrapper">
+        <span class="category-dot" style="background: linear-gradient(135deg, ${colors[0]}, ${colors[1]});"></span>
+        <span>${escapeHtml(category)}</span>
+      </div>
+      <button class="category-delete-btn" title="Delete Category">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    `;
+
+    li.querySelector('.category-delete-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleDeleteCategory(category);
+    });
+
+    DOM.categoriesList.appendChild(li);
+  });
+}
+
+// ==========================================================================
+// CATEGORIES LOGIC IN SETTINGS
+// ==========================================================================
+function handleAddCategory(e) {
+  e.preventDefault();
+  const name = DOM.newCategoryInput.value.trim();
+  if (!name) return;
+
+  const duplicate = state.categories.some(cat => cat.toLowerCase() === name.toLowerCase());
+  if (duplicate) {
+    showToast('Category already exists!', 'error');
+    return;
+  }
+
+  const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+  state.categories.push(formattedName);
+  saveCategories();
+  
+  DOM.newCategoryInput.value = '';
+  renderSettingsPage();
+  showToast(`Added category: ${formattedName}`, 'success');
+}
+
+function handleDeleteCategory(categoryName) {
+  const count = state.items.filter(item => item.type === categoryName).length;
+  let confirmMsg = `Are you sure you want to delete "${categoryName}"?`;
+  
+  if (count > 0) {
+    confirmMsg = `There are ${count} items cataloged under "${categoryName}". Deleting it will keep the items, but unassign their category. Proceed?`;
+  }
+
+  if (confirm(confirmMsg)) {
+    state.categories = state.categories.filter(cat => cat !== categoryName);
+    saveCategories();
+
+    // Clean deleted category reference in items
+    state.items = state.items.map(item => {
+      if (item.type === categoryName) {
+        item.type = ''; // Unassign category
+      }
+      return item;
+    });
+    saveItems();
+
+    // If we deleted the category page we are currently looking at, navigate home
+    if (state.currentView === categoryName) {
+      navigate('dashboard');
+    } else {
+      renderSettingsPage();
+    }
+    showToast(`Deleted category: ${categoryName}`, 'info');
+  }
+}
+
+// ==========================================================================
+// RENDER ITEMS LIST (GRID VIEW FILTERED FOR LIBRARY PAGE)
+// ==========================================================================
 function renderList() {
-  // Apply Search, Category, Status Filters
+  if (state.currentView === 'dashboard' || state.currentView === 'settings') return;
+
+  const activeCategory = state.currentView;
+
+  // Filter items matching active category + search query + status filters
   let filteredItems = state.items.filter(item => {
-    // 1. Search Query
+    // 1. Match current view category
+    const typeMatch = item.type === activeCategory;
+
+    // 2. Search query
     const searchMatch = !state.filters.search || 
       item.title.toLowerCase().includes(state.filters.search.toLowerCase()) ||
       item.creator.toLowerCase().includes(state.filters.search.toLowerCase());
       
-    // 2. Category Type Filter (handle items with deleted/unassigned category as well)
-    const typeMatch = state.filters.type === 'all' || item.type === state.filters.type;
-    
     // 3. Status Filter
     const statusMatch = state.filters.status === 'all' || item.status === state.filters.status;
     
-    return searchMatch && typeMatch && statusMatch;
+    return typeMatch && searchMatch && statusMatch;
   });
 
   // Apply Sorting
@@ -652,12 +628,11 @@ function renderList() {
         
       case 'rating-desc':
         if (a.rating === b.rating) {
-          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); // tie breaker
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
         }
         return b.rating - a.rating;
         
       case 'rating-asc':
-        // Keep unrated items (0) at the bottom
         if (a.rating === 0 && b.rating > 0) return 1;
         if (b.rating === 0 && a.rating > 0) return -1;
         if (a.rating === b.rating) {
@@ -696,7 +671,6 @@ function createCard(item) {
   card.setAttribute('aria-label', `${item.type || 'Media'}: ${item.title}`);
   card.addEventListener('click', () => openModal(item));
 
-  // Determine Badge labels & Status class
   const typeBadgeText = item.type || 'Unassigned';
   const hasTypeClass = item.type ? 'badge-type-custom' : 'badge-type-unassigned';
   
@@ -716,12 +690,11 @@ function createCard(item) {
       break;
   }
   
-  // Cover Render
+  // Cover Art
   let coverHtml = '';
   if (item.coverUrl) {
     coverHtml = `<img src="${escapeHtml(item.coverUrl)}" alt="${escapeHtml(item.title)} cover" loading="lazy">`;
   } else {
-    // Generate beautiful colored gradient cover based on name hashing
     const gradColors = getCategoryGradient(item.type || 'default');
     
     let iconClass = 'fa-solid fa-bookmark';
@@ -738,7 +711,7 @@ function createCard(item) {
     `;
   }
 
-  // Stars HTML
+  // Star Ratings
   let starsHtml = '';
   if (item.rating > 0) {
     for (let i = 1; i <= 5; i++) {
@@ -752,19 +725,18 @@ function createCard(item) {
     starsHtml = '<span class="unrated-label">Unrated</span>';
   }
 
-  // Dates strings
+  // Date selectors
   const startDateStr = item.startDate ? formatDate(item.startDate) : '--';
   const endDateStr = item.endDate ? formatDate(item.endDate) : '--';
   const datesHtml = item.status === 'planning' 
     ? `<div class="card-dates"><span>Added: ${formatDate(item.createdAt || new Date().toISOString())}</span></div>`
     : `<div class="card-dates"><span>Start: ${startDateStr}</span><span>End: ${endDateStr}</span></div>`;
 
-  // Notes snippet
+  // Review section
   const notesSnippet = item.notes 
     ? `<div class="card-notes">${escapeHtml(item.notes)}</div>` 
     : '';
 
-  // Generate dynamic type badge style
   const grad = getCategoryGradient(item.type || 'default');
   const typeBadgeStyle = `background: linear-gradient(135deg, ${grad[0]}cc, ${grad[1]}cc); border: 1px solid ${grad[0]};`;
 
@@ -797,7 +769,6 @@ function exportLibrary() {
     return;
   }
   
-  // Export schema includes categories list
   const exportData = {
     version: 2,
     categories: state.categories,
@@ -831,13 +802,11 @@ function handleImportFile(e) {
       let importedItems = [];
       let importedCategories = [];
 
-      // Check format version
+      // Detect schema format
       if (Array.isArray(importedJson)) {
-        // Legacy import (direct array of items)
         importedItems = importedJson;
-        importedCategories = ["Books", "Dramas", "Mangas", "Animes"]; // use defaults
+        importedCategories = ["Books", "Dramas", "Mangas", "Animes"];
       } else if (importedJson && typeof importedJson === 'object' && importedJson.items) {
-        // Version 2 import (object containing items and categories)
         importedItems = importedJson.items;
         importedCategories = importedJson.categories || [];
       } else {
@@ -853,24 +822,22 @@ function handleImportFile(e) {
       }
 
       if (confirm(`Do you want to import ${validatedItems.length} records? They will be merged with your current library.`)) {
-        // Merge categories
+        // Merge categories list
         const mergedCategories = Array.from(new Set([...state.categories, ...importedCategories]));
         state.categories = mergedCategories;
         saveCategories();
 
-        // Prevent duplicate IDs (regenerate if exists)
+        // Avoid ID collisions
         const existingIds = new Set(state.items.map(item => item.id));
         const cleanItems = validatedItems.map(item => {
           if (existingIds.has(item.id) || !item.id) {
             item.id = (Date.now() + Math.random()).toString();
           }
           
-          // Map legacy types
           let type = item.type;
           if (type === 'book') type = 'Books';
           if (type === 'drama') type = 'Dramas';
 
-          // Normalise schema fields just in case
           return {
             id: item.id,
             title: item.title,
@@ -888,21 +855,23 @@ function handleImportFile(e) {
 
         state.items = [...cleanItems, ...state.items];
         saveItems();
-        renderApp();
+        
+        // Refresh routing view
+        navigate(state.currentView);
         showToast(`Imported ${cleanItems.length} records successfully!`, 'success');
       }
     } catch (error) {
       console.error('Import Error:', error);
       showToast('Import failed. Please choose a valid JSON backup file.', 'error');
     }
-    DOM.importFileInput.value = ''; // Reset input
+    DOM.importFileInput.value = '';
   };
   
   reader.readAsText(file);
 }
 
 // ==========================================================================
-// UTILITY FUNCTIONS
+// UTILITY HELPERS
 // ==========================================================================
 function escapeHtml(str) {
   if (!str) return '';
@@ -925,7 +894,7 @@ function formatDate(dateStr) {
   }
 }
 
-// String hashing to generate a unique, beautiful gradient color pair
+// Category hashing color manager
 function getCategoryGradient(categoryName) {
   const colors = [
     ['#8b5cf6', '#a855f7'], // Violet -> Purple
@@ -944,7 +913,7 @@ function getCategoryGradient(categoryName) {
   return colors[index];
 }
 
-// Notification Toast Generator
+// English Toast Generator
 function showToast(message, type = 'success') {
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
@@ -970,9 +939,85 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-// ==========================================================================
-// MOCK DATA GENERATOR (English version)
-// ==========================================================================
+function populateCategorySelect() {
+  DOM.formType.innerHTML = '';
+  
+  if (state.categories.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = '(Create a category first)';
+    DOM.formType.appendChild(opt);
+    return;
+  }
+
+  state.categories.forEach(category => {
+    const opt = document.createElement('option');
+    opt.value = category;
+    opt.textContent = category;
+    DOM.formType.appendChild(opt);
+  });
+}
+
+function updateCreatorLabel() {
+  const type = DOM.formType.value.toLowerCase();
+  
+  if (type.includes('book') || type.includes('manga') || type.includes('novel')) {
+    DOM.creatorLabel.innerHTML = 'Author <span class="required">*</span>';
+    DOM.formCreator.placeholder = 'e.g., Haruki Murakami, Keigo Higashino';
+  } else if (type.includes('drama') || type.includes('anime') || type.includes('movie') || type.includes('show')) {
+    DOM.creatorLabel.innerHTML = 'Director / Studio <span class="required">*</span>';
+    DOM.formCreator.placeholder = 'e.g., Studio Ghibli, David Fincher';
+  } else {
+    DOM.creatorLabel.innerHTML = 'Creator / Artist <span class="required">*</span>';
+    DOM.formCreator.placeholder = 'e.g., Name of the creator';
+  }
+}
+
+// Pre-fills category selectors dynamically inside modal creation
+function openModal(item = null) {
+  DOM.itemForm.reset();
+  populateCategorySelect();
+
+  if (item) {
+    // Edit mode
+    DOM.modalTitle.textContent = 'Edit Record';
+    DOM.formId.value = item.id;
+    DOM.formTitle.value = item.title;
+    DOM.formType.value = item.type || '';
+    DOM.formCreator.value = item.creator;
+    DOM.formStatus.value = item.status;
+    DOM.formCover.value = item.coverUrl || '';
+    DOM.formStartDate.value = item.startDate || '';
+    DOM.formEndDate.value = item.endDate || '';
+    DOM.formNotes.value = item.notes || '';
+    
+    if (item.rating) {
+      const radio = document.getElementById(`star${item.rating}`);
+      if (radio) radio.checked = true;
+    }
+    DOM.formDeleteBtn.style.display = 'inline-flex';
+  } else {
+    // Add mode
+    DOM.modalTitle.textContent = 'Add to Library';
+    DOM.formId.value = '';
+    DOM.formDeleteBtn.style.display = 'none';
+
+    // Contextual Pre-fill based on active view
+    if (state.currentView !== 'dashboard' && state.currentView !== 'settings') {
+      DOM.formType.value = state.currentView;
+    }
+  }
+  
+  updateCreatorLabel();
+  DOM.itemModal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  DOM.itemModal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
 function getMockItems() {
   return [
     {

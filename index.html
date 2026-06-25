@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YourLibrary - Books & Dramas Log</title>
-  <meta name="description" content="A private, beautiful web app to log and review your books and drama logs. Track metrics and save history safely in your browser.">
+  <title>YourLibrary - Personal Media Tracker</title>
+  <meta name="description" content="A private, beautiful web app to track your books, dramas, mangas, and animes. Organize by custom categories with advanced statistics and LocalStorage privacy.">
   
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
@@ -29,28 +29,19 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
   <aside class="sidebar-menu" id="sidebar-menu">
     <div class="sidebar-header">
-      <h2>Menu</h2>
+      <div class="sidebar-brand">
+        <i class="fa-solid fa-bookmark"></i>
+        <span>YourLibrary</span>
+      </div>
       <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close Sidebar">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
     
     <div class="sidebar-content">
-      <section class="sidebar-section">
-        <h3><i class="fa-solid fa-tags"></i> Manage Categories</h3>
-        <p class="section-desc">Add or remove media categories you want to track (e.g., Books, Mangas, Dramas, Animes).</p>
-        
-        <!-- Add Category Form -->
-        <form id="add-category-form" class="sidebar-form">
-          <input type="text" id="new-category-input" placeholder="Category name..." required maxlength="20">
-          <button type="submit" class="btn btn-primary" title="Add Category"><i class="fa-solid fa-plus"></i></button>
-        </form>
-        
-        <!-- Categories List -->
-        <ul class="categories-list" id="categories-list">
-          <!-- Dynamically populated via JS -->
-        </ul>
-      </section>
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <!-- Dynamically populated: Dashboard, Dynamic Category Pages, Settings -->
+      </nav>
     </div>
   </aside>
 
@@ -71,91 +62,156 @@
       </div>
       
       <div class="header-actions">
-        <button id="export-btn" class="btn btn-secondary" title="Export Library Backup">
-          <i class="fa-solid fa-file-export"></i> <span>Export</span>
-        </button>
-        <button id="import-btn" class="btn btn-secondary" title="Import Library Backup">
-          <i class="fa-solid fa-file-import"></i> <span>Import</span>
-        </button>
-        <input type="file" id="import-file-input" accept=".json" style="display: none;">
-        
+        <!-- Theme Toggle button -->
         <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
           <i class="fa-solid fa-sun"></i>
         </button>
       </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main Content Area with Views -->
     <main class="app-main">
       
-      <!-- Stats Dashboard -->
-      <section class="stats-section" id="stats-section" aria-label="Dashboard Statistics">
-        <!-- Dynamically populated via JS -->
-      </section>
+      <!-- 1. DASHBOARD VIEW -->
+      <div id="view-dashboard" class="view-container">
+        <section class="welcome-banner">
+          <h2>Welcome to YourLibrary</h2>
+          <p>This is a high-level summary of your logs. Use the top-left menu to navigate to individual pages or add new items.</p>
+        </section>
 
-      <!-- Controls & Filter Section -->
-      <section class="controls-section">
-        <div class="search-bar">
-          <i class="fa-solid fa-magnifying-glass search-icon"></i>
-          <input type="text" id="search-input" placeholder="Search by title, author, or director...">
-        </div>
-        
-        <div class="filters-row">
-          <!-- Type Filter Tabs -->
-          <div class="filter-tabs" id="filter-tabs">
-            <!-- Dynamically populated via JS -->
+        <!-- Stats Section -->
+        <section class="stats-section" id="stats-section" aria-label="Dashboard Statistics">
+          <!-- Populated dynamically via JS -->
+        </section>
+
+        <!-- Recent Additions Section -->
+        <section class="recent-section">
+          <div class="section-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Logs</h3>
+          </div>
+          <div class="items-grid" id="recent-grid">
+            <!-- Dynamically populated with 4 newest cards -->
+          </div>
+        </section>
+      </div>
+
+      <!-- 2. LIBRARY VIEW (CATEGORY-SPECIFIC) -->
+      <div id="view-library" class="view-container hidden">
+        <!-- Page Header -->
+        <header class="library-page-header">
+          <h2 id="library-title">Category Collection</h2>
+          <p id="library-subtitle" class="section-desc">Manage and view your collection.</p>
+        </header>
+
+        <!-- Stats Section -->
+        <section class="stats-section" id="category-stats-section" aria-label="Category Statistics">
+          <!-- Populated dynamically via JS -->
+        </section>
+
+        <!-- Controls Section -->
+        <section class="controls-section">
+          <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="search-input" placeholder="Search by title or creator...">
           </div>
           
-          <div class="filter-dropdowns">
-            <!-- Status Filter -->
-            <div class="select-wrapper">
-              <select id="status-filter" aria-label="Filter by Status">
-                <option value="all">All Statuses</option>
-                <option value="planning">Plan to Read/Watch</option>
-                <option value="reading">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
-              <i class="fa-solid fa-chevron-down select-icon"></i>
+          <div class="filters-row">
+            <div class="filter-dropdowns">
+              <!-- Status Filter -->
+              <div class="select-wrapper">
+                <select id="status-filter" aria-label="Filter by Status">
+                  <option value="all">All Statuses</option>
+                  <option value="planning">Plan to Read/Watch</option>
+                  <option value="reading">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon"></i>
+              </div>
+              
+              <!-- Sort Selector -->
+              <div class="select-wrapper">
+                <select id="sort-selector" aria-label="Sort Order">
+                  <option value="newest">Newest Added</option>
+                  <option value="oldest">Oldest Added</option>
+                  <option value="rating-desc">Highest Rated</option>
+                  <option value="rating-asc">Lowest Rated</option>
+                  <option value="title">Title (A-Z)</option>
+                </select>
+                <i class="fa-solid fa-sort select-icon"></i>
+              </div>
             </div>
+
+            <!-- Contextual Add Button -->
+            <button id="add-item-btn" class="btn btn-primary">
+              <i class="fa-solid fa-plus"></i> <span id="add-btn-text">Add Item</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Items Grid -->
+        <section class="items-grid-section">
+          <div class="items-grid" id="items-grid">
+            <!-- Dynamically populated via JS -->
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state" id="empty-state">
+            <div class="empty-icon">
+              <i class="fa-regular fa-folder-open"></i>
+            </div>
+            <h3>Your collection is empty</h3>
+            <p>Add your first item to start curating this list!</p>
+            <button id="empty-add-btn" class="btn btn-primary">
+              <i class="fa-solid fa-plus"></i> <span>Add First Item</span>
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <!-- 3. SETTINGS & BACKUP VIEW -->
+      <div id="view-settings" class="view-container hidden">
+        <header class="library-page-header">
+          <h2>Settings & Backups</h2>
+          <p class="section-desc">Configure your categories and backup your library database.</p>
+        </header>
+
+        <div class="settings-grid">
+          <!-- Category Manager Card -->
+          <section class="settings-card">
+            <div class="settings-card-header">
+              <h3><i class="fa-solid fa-tags"></i> Manage Categories</h3>
+            </div>
+            <p class="section-desc">Add or remove media categories you want to track (e.g., Books, Mangas, Dramas, Animes).</p>
             
-            <!-- Sort Selector -->
-            <div class="select-wrapper">
-              <select id="sort-selector" aria-label="Sort Order">
-                <option value="newest">Newest Added</option>
-                <option value="oldest">Oldest Added</option>
-                <option value="rating-desc">Highest Rated</option>
-                <option value="rating-asc">Lowest Rated</option>
-                <option value="title">Title (A-Z)</option>
-              </select>
-              <i class="fa-solid fa-sort select-icon"></i>
+            <form id="add-category-form" class="sidebar-form">
+              <input type="text" id="new-category-input" placeholder="Category name (e.g., Mangas)..." required maxlength="20">
+              <button type="submit" class="btn btn-primary" title="Add Category"><i class="fa-solid fa-plus"></i></button>
+            </form>
+            
+            <ul class="categories-list" id="categories-list">
+              <!-- Dynamically populated via JS -->
+            </ul>
+          </section>
+
+          <!-- Database Backups Card -->
+          <section class="settings-card">
+            <div class="settings-card-header">
+              <h3><i class="fa-solid fa-database"></i> Database Backups</h3>
             </div>
-          </div>
-
-          <!-- Add Button -->
-          <button id="add-item-btn" class="btn btn-primary">
-            <i class="fa-solid fa-plus"></i> <span>Add to Library</span>
-          </button>
+            <p class="section-desc">Download your entire library database as a JSON backup, or import a previously exported file to restore your logs.</p>
+            
+            <div class="backup-actions">
+              <button id="settings-export-btn" class="btn btn-secondary">
+                <i class="fa-solid fa-file-export"></i> <span>Export Backup JSON</span>
+              </button>
+              <button id="settings-import-btn" class="btn btn-secondary">
+                <i class="fa-solid fa-file-import"></i> <span>Import Backup JSON</span>
+              </button>
+              <input type="file" id="import-file-input" accept=".json" style="display: none;">
+            </div>
+          </section>
         </div>
-      </section>
-
-      <!-- Items Grid -->
-      <section class="items-grid-section">
-        <div class="items-grid" id="items-grid">
-          <!-- Dynamically populated via JS -->
-        </div>
-
-        <!-- Empty State -->
-        <div class="empty-state" id="empty-state">
-          <div class="empty-icon">
-            <i class="fa-regular fa-folder-open"></i>
-          </div>
-          <h3>Your library is empty</h3>
-          <p>Start recording your favorite books and dramas to build your private collection!</p>
-          <button id="empty-add-btn" class="btn btn-primary">
-            <i class="fa-solid fa-plus"></i> <span>Add Your First Item</span>
-          </button>
-        </div>
-      </section>
+      </div>
 
     </main>
 
