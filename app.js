@@ -506,7 +506,12 @@ function renderLibraryPage(categoryName) {
       <span class="stat-label">Total Logged</span>
     </div>
   `;
-  catTotalCard.addEventListener('click', () => openModal(null));
+  catTotalCard.addEventListener('click', () => {
+    state.filters.status = 'all';
+    if (DOM.statusFilter) DOM.statusFilter.value = 'all';
+    renderList();
+    openModal(null);
+  });
   DOM.categoryStatsSection.appendChild(catTotalCard);
 
   // Completed in category card
@@ -522,7 +527,12 @@ function renderLibraryPage(categoryName) {
       <span class="stat-label">Completed</span>
     </div>
   `;
-  completedCard.addEventListener('click', () => openModal(null, 'completed'));
+  completedCard.addEventListener('click', () => {
+    state.filters.status = 'completed';
+    if (DOM.statusFilter) DOM.statusFilter.value = 'completed';
+    renderList();
+    openModal(null, 'completed');
+  });
   DOM.categoryStatsSection.appendChild(completedCard);
 
   // In Progress in category card
@@ -538,7 +548,12 @@ function renderLibraryPage(categoryName) {
       <span class="stat-label">In Progress</span>
     </div>
   `;
-  progressCard.addEventListener('click', () => openModal(null, 'reading'));
+  progressCard.addEventListener('click', () => {
+    state.filters.status = 'reading';
+    if (DOM.statusFilter) DOM.statusFilter.value = 'reading';
+    renderList();
+    openModal(null, 'reading');
+  });
   DOM.categoryStatsSection.appendChild(progressCard);
 
   // My List (Planning) in category card
@@ -555,7 +570,12 @@ function renderLibraryPage(categoryName) {
       <span class="stat-label">My List</span>
     </div>
   `;
-  catPlanningCard.addEventListener('click', () => openModal(null, 'planning'));
+  catPlanningCard.addEventListener('click', () => {
+    state.filters.status = 'planning';
+    if (DOM.statusFilter) DOM.statusFilter.value = 'planning';
+    renderList();
+    openModal(null, 'planning');
+  });
   DOM.categoryStatsSection.appendChild(catPlanningCard);
 
   // Dynamically populate Language Filter dropdown
@@ -1077,11 +1097,9 @@ function populateCategorySelect() {
   DOM.formType.innerHTML = '';
   
   if (state.categories.length === 0) {
-    const opt = document.createElement('option');
-    opt.value = '';
-    opt.textContent = '(Create a category first)';
-    DOM.formType.appendChild(opt);
-    return;
+    state.categories = ["Books", "Dramas", "Mangas", "Animes"];
+    saveCategories();
+    renderSidebarNav();
   }
 
   state.categories.forEach(category => {
