@@ -154,6 +154,9 @@ function loadData() {
       console.error('Failed to parse categories, resetting to defaults.', e);
     }
   }
+  if (!Array.isArray(state.categories) || state.categories.length === 0) {
+    state.categories = ["Books", "Dramas", "Mangas", "Animes"];
+  }
 
   // Load Languages
   const savedLanguages = localStorage.getItem('yl_languages');
@@ -163,6 +166,9 @@ function loadData() {
     } catch (e) {
       console.error('Failed to parse languages, resetting to defaults.', e);
     }
+  }
+  if (!Array.isArray(state.languages) || state.languages.length === 0) {
+    state.languages = ["Japanese", "English", "Korean", "Chinese"];
   }
 
   // Load Items
