@@ -251,8 +251,8 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="form-creator" id="creator-label">Author <span class="required">*</span></label>
-            <input type="text" id="form-creator" placeholder="e.g., Haruki Murakami, The Duffer Brothers" required>
+            <label for="form-creator" id="creator-label">Author</label>
+            <input type="text" id="form-creator" placeholder="e.g., Haruki Murakami, The Duffer Brothers">
           </div>
           
           <div class="form-group">
@@ -268,56 +268,58 @@
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Rating (1-5 Stars)</label>
-            <div class="star-rating-input">
-              <input type="radio" id="star5" name="rating" value="5"><label for="star5" title="5 Stars"><i class="fa-solid fa-star"></i></label>
-              <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4 Stars"><i class="fa-solid fa-star"></i></label>
-              <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3 Stars"><i class="fa-solid fa-star"></i></label>
-              <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2 Stars"><i class="fa-solid fa-star"></i></label>
-              <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1 Star"><i class="fa-solid fa-star"></i></label>
+        <div id="status-conditional-fields">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Rating (1-5 Stars)</label>
+              <div class="star-rating-input">
+                <input type="radio" id="star5" name="rating" value="5"><label for="star5" title="5 Stars"><i class="fa-solid fa-star"></i></label>
+                <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4 Stars"><i class="fa-solid fa-star"></i></label>
+                <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3 Stars"><i class="fa-solid fa-star"></i></label>
+                <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2 Stars"><i class="fa-solid fa-star"></i></label>
+                <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1 Star"><i class="fa-solid fa-star"></i></label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="form-cover">Cover Image URL (Optional)</label>
+              <input type="url" id="form-cover" placeholder="https://example.com/cover.jpg">
+            </div>
+          </div>
+
+          <div class="form-row dates-row">
+            <div class="form-group">
+              <label for="form-start-date">Start Date</label>
+              <input type="date" id="form-start-date">
+            </div>
+            
+            <div class="form-group">
+              <label for="form-end-date">End Date</label>
+              <input type="date" id="form-end-date">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="form-language">Language</label>
+              <div class="select-wrapper">
+                <select id="form-language">
+                  <!-- Populated dynamically via JS -->
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon"></i>
+              </div>
+            </div>
+            
+            <div class="form-group flex-1" id="custom-language-group" style="display: none;">
+              <label for="form-custom-language">Custom Language Name</label>
+              <input type="text" id="form-custom-language" placeholder="e.g., French, Spanish" maxlength="15">
             </div>
           </div>
 
           <div class="form-group">
-            <label for="form-cover">Cover Image URL (Optional)</label>
-            <input type="url" id="form-cover" placeholder="https://example.com/cover.jpg">
+            <label for="form-notes">Personal Review / Notes</label>
+            <textarea id="form-notes" rows="4" placeholder="Write your thoughts, reviews, or private notes about this work..."></textarea>
           </div>
-        </div>
-
-        <div class="form-row dates-row">
-          <div class="form-group">
-            <label for="form-start-date">Start Date</label>
-            <input type="date" id="form-start-date">
-          </div>
-          
-          <div class="form-group">
-            <label for="form-end-date">End Date</label>
-            <input type="date" id="form-end-date">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group flex-1">
-            <label for="form-language">Language <span class="required">*</span></label>
-            <div class="select-wrapper">
-              <select id="form-language" required>
-                <!-- Populated dynamically via JS -->
-              </select>
-              <i class="fa-solid fa-chevron-down select-icon"></i>
-            </div>
-          </div>
-          
-          <div class="form-group flex-1" id="custom-language-group" style="display: none;">
-            <label for="form-custom-language">Custom Language Name <span class="required">*</span></label>
-            <input type="text" id="form-custom-language" placeholder="e.g., French, Spanish" maxlength="15">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="form-notes">Personal Review / Notes</label>
-          <textarea id="form-notes" rows="4" placeholder="Write your thoughts, reviews, or private notes about this work..."></textarea>
         </div>
 
         <div class="form-actions">

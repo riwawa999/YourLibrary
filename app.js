@@ -86,6 +86,7 @@ const DOM = {
   formNotes: document.getElementById('form-notes'),
   formDeleteBtn: document.getElementById('form-delete-btn'),
   formCancelBtn: document.getElementById('form-cancel-btn'),
+  formConditionalFields: document.getElementById('status-conditional-fields'),
 
   // Toast Container
   toastContainer: document.getElementById('toast-container')
@@ -309,6 +310,10 @@ function setupEventListeners() {
   DOM.languageFilter.addEventListener('change', (e) => {
     state.filters.language = e.target.value;
     renderList();
+  });
+
+  DOM.formStatus.addEventListener('change', (e) => {
+    toggleModalFields(e.target.value);
   });
 
   if (DOM.sortPillsContainer) {
@@ -1248,6 +1253,7 @@ function openModal(item = null, defaultStatus = null, defaultCategory = null) {
   }
   
   updateCreatorLabel();
+  toggleModalFields(DOM.formStatus.value);
   DOM.itemModal.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -1255,6 +1261,15 @@ function openModal(item = null, defaultStatus = null, defaultCategory = null) {
 function closeModal() {
   DOM.itemModal.classList.remove('active');
   document.body.style.overflow = '';
+}
+
+function toggleModalFields(status) {
+  if (!DOM.formConditionalFields) return;
+  if (status === 'planning') {
+    DOM.formConditionalFields.style.display = 'none';
+  } else {
+    DOM.formConditionalFields.style.display = 'block';
+  }
 }
 
 function handleFormSubmit(e) {
@@ -1299,8 +1314,8 @@ function handleFormSubmit(e) {
   }
 
   // Basic Validation
-  if (!title || !creator) {
-    showToast('Title and Creator fields are required.', 'error');
+  if (!title) {
+    showToast('Title is required.', 'error');
     return;
   }
   
@@ -1308,6 +1323,15 @@ function handleFormSubmit(e) {
     showToast('Please select or add a category first.', 'error');
     return;
   }
+
+  // Clear fields if status is planning (Add to My List)
+  const isPlanning = status === 'planning';
+  const savedLanguage = isPlanning ? '' : language;
+  const savedRating = isPlanning ? 0 : rating;
+  const savedCoverUrl = isPlanning ? '' : coverUrl;
+  const savedStartDate = isPlanning ? '' : startDate;
+  const savedEndDate = isPlanning ? '' : endDate;
+  const savedNotes = isPlanning ? '' : notes;
   
   if (id) {
     // Edit existing item
@@ -1319,12 +1343,12 @@ function handleFormSubmit(e) {
         type,
         creator,
         status,
-        language,
-        rating,
-        coverUrl,
-        startDate,
-        endDate,
-        notes
+        language: savedLanguage,
+        rating: savedRating,
+        coverUrl: savedCoverUrl,
+        startDate: savedStartDate,
+        endDate: savedEndDate,
+        notes: savedNotes
       };
       showToast('Record updated successfully!', 'success');
     }
@@ -1336,12 +1360,12 @@ function handleFormSubmit(e) {
       type,
       creator,
       status,
-      language,
-      rating,
-      coverUrl,
-      startDate,
-      endDate,
-      notes,
+      language: savedLanguage,
+      rating: savedRating,
+      coverUrl: savedCoverUrl,
+      startDate: savedStartDate,
+      endDate: savedEndDate,
+      notes: savedNotes,
       createdAt: new Date().toISOString()
     };
     state.items.unshift(newItem); // Add to the front
