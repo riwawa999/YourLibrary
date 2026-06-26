@@ -1222,7 +1222,7 @@ function renderLibraryPage(categoryName) {
   catTotalCard.setAttribute('data-status-filter', 'all');
   const grad = getCategoryGradient(categoryName);
   catTotalCard.innerHTML = `
-    <div class="stat-icon" style="background-color: rgba(236, 72, 153, 0.08); color: ${grad[0]};">
+    <div class="stat-icon" style="background-color: ${grad[0]}1A; color: ${grad[0]};">
       <i class="fa-solid fa-list-ul"></i>
     </div>
     <div class="stat-details">
@@ -1243,7 +1243,7 @@ function renderLibraryPage(categoryName) {
   completedCard.className = 'stat-card';
   completedCard.setAttribute('data-status-filter', 'completed');
   completedCard.innerHTML = `
-    <div class="stat-icon icon-violet" style="color: var(--color-green); background-color: rgba(16, 185, 129, 0.12);">
+    <div class="stat-icon" style="background-color: ${grad[0]}1A; color: ${grad[0]};">
       <i class="fa-solid fa-circle-check"></i>
     </div>
     <div class="stat-details">
@@ -1264,7 +1264,7 @@ function renderLibraryPage(categoryName) {
   progressCard.className = 'stat-card';
   progressCard.setAttribute('data-status-filter', 'reading');
   progressCard.innerHTML = `
-    <div class="stat-icon icon-blue">
+    <div class="stat-icon" style="background-color: ${grad[0]}1A; color: ${grad[0]};">
       <i class="fa-solid fa-spinner"></i>
     </div>
     <div class="stat-details">
@@ -1286,7 +1286,7 @@ function renderLibraryPage(categoryName) {
   catPlanningCard.className = 'stat-card';
   catPlanningCard.setAttribute('data-status-filter', 'planning');
   catPlanningCard.innerHTML = `
-    <div class="stat-icon icon-amber">
+    <div class="stat-icon" style="background-color: ${grad[0]}1A; color: ${grad[0]};">
       <i class="fa-solid fa-bookmark"></i>
     </div>
     <div class="stat-details">
@@ -1838,6 +1838,10 @@ function formatDate(dateStr) {
 
 // Category hashing color manager
 function getCategoryGradient(categoryName) {
+  if (categoryName === 'mylist') {
+    return ['#ea4335', '#ea4335'];
+  }
+
   const colors = [
     ['#fbbc05', '#fbbc05'], // Google Yellow (Books)
     ['#4285f4', '#4285f4'], // Google Blue (Dramas)
