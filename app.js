@@ -1250,13 +1250,13 @@ function formatDate(dateStr) {
 // Category hashing color manager
 function getCategoryGradient(categoryName) {
   const colors = [
-    ['#8b5cf6', '#a855f7'], // Violet -> Purple
-    ['#ec4899', '#f472b6'], // Pink -> Light Pink
-    ['#3b82f6', '#60a5fa'], // Blue -> Light Blue
-    ['#10b981', '#34d399'], // Emerald -> Mint
-    ['#f59e0b', '#fbbf24'], // Amber -> Yellow
-    ['#14b8a6', '#2dd4bf'], // Teal -> Turquoise
-    ['#6366f1', '#818cf8']  // Indigo -> Light Indigo
+    ['#ffd1dc', '#ec4899'], // Soft Pink -> Rose
+    ['#fff0f5', '#fda4af'], // Lavender Blush -> Rose Pink
+    ['#ffe4e1', '#fb7185'], // Misty Rose -> Rose 400
+    ['#fce7f3', '#f472b6'], // Cotton Candy -> Pink 400
+    ['#fae8ff', '#e879f9'], // Light Fuchsia -> Fuchsia 400
+    ['#ffe4e6', '#fb7185'], // Rose 100 -> Rose 400
+    ['#fbcfe8', '#db2777']  // Pink 200 -> Pink 600
   ];
   let hash = 0;
   for (let i = 0; i < categoryName.length; i++) {
