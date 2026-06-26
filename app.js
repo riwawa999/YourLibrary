@@ -912,7 +912,7 @@ function renderSidebarNav() {
     const myListLink = document.createElement('button');
     myListLink.className = `sidebar-nav-item ${state.currentView === 'mylist' ? 'active' : ''}`;
     myListLink.innerHTML = `
-      <i class="fa-solid fa-bookmark" style="color: #ea4335;"></i>
+      <i class="fa-solid fa-bookmark"></i>
       <span>MyList</span>
     `;
     myListLink.addEventListener('click', () => navigate('mylist'));
