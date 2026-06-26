@@ -1,5 +1,5 @@
 /**
- * YourLibrary - Core Application Logic (English Version)
+ * MyLittleLibrary - Core Application Logic (English Version)
  * State management, LocalStorage, CRUD operations, Search, Sort, Filters, and Theme toggles.
  * Supports multi-view SPA routing and customizable item languages.
  */
