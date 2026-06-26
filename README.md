@@ -1,9 +1,9 @@
-# YourLibrary 📚📺
+# MyLittleLibrary 📚📺
 
-YourLibrary is a premium, modern single-page web application to log, track, and review the books you read and the dramas you watch.  
+MyLittleLibrary is a premium, modern single-page web application to log, track, and review the books you read and the dramas you watch.  
 Operating entirely on the client side with the browser's `LocalStorage` API, the application requires no backend or external server, ensuring a completely private, fast, and secure media tracking experience.
 
-👉 **[Launch Live Web App (GitHub Pages)](https://riwawawa.github.io/YourLibrary/)**
+👉 **[Launch Live Web App (GitHub Pages)](https://riwawa999.github.io/YourLibrary/)**
 
 ---
 
