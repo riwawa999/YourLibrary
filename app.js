@@ -787,25 +787,31 @@ function setupEventListeners() {
   // Delete Action in Form
   DOM.formDeleteBtn.addEventListener('click', handleDeleteItem);
 
-  // Online Search Event Listeners
-  const onlineSearchBtn = document.getElementById('online-search-btn');
-  const onlineSearchInput = document.getElementById('online-search-input');
-  const onlineSearchResults = document.getElementById('online-search-results');
-
-  if (onlineSearchBtn && onlineSearchInput) {
-    onlineSearchBtn.addEventListener('click', handleOnlineSearch);
-    onlineSearchInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleOnlineSearch();
-      }
-    });
-  }
+  // Dynamic Autocomplete Online Search
+  let searchDebounceTimer = null;
+  DOM.formTitle.addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+    
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    
+    const onlineSearchResults = document.getElementById('online-search-results');
+    if (!onlineSearchResults) return;
+    
+    if (query.length < 2) {
+      onlineSearchResults.classList.add('hidden');
+      return;
+    }
+    
+    searchDebounceTimer = setTimeout(() => {
+      handleOnlineSearch(query);
+    }, 300);
+  });
 
   // Click outside search results to close dropdown
   document.addEventListener('click', (e) => {
+    const onlineSearchResults = document.getElementById('online-search-results');
     if (onlineSearchResults && !onlineSearchResults.classList.contains('hidden')) {
-      if (!e.target.closest('.online-search-group')) {
+      if (!e.target.closest('.form-group')) {
         onlineSearchResults.classList.add('hidden');
       }
     }
@@ -1875,31 +1881,18 @@ function populateSuggestions() {
   });
 }
 
-async function handleOnlineSearch() {
-  const onlineSearchInput = document.getElementById('online-search-input');
+async function handleOnlineSearch(query) {
   const onlineSearchResults = document.getElementById('online-search-results');
-  const onlineSearchBtn = document.getElementById('online-search-btn');
-  
-  if (!onlineSearchInput || !onlineSearchResults || !onlineSearchBtn) return;
-  
-  const query = onlineSearchInput.value.trim();
-  if (!query) {
-    showToast('Please enter search query', 'error');
-    return;
-  }
-  
-  const originalBtnHtml = onlineSearchBtn.innerHTML;
-  onlineSearchBtn.disabled = true;
-  onlineSearchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+  if (!onlineSearchResults) return;
   
   onlineSearchResults.innerHTML = '';
   onlineSearchResults.classList.remove('hidden');
   
   const loadingItem = document.createElement('div');
-  loadingItem.style.padding = '1rem';
+  loadingItem.style.padding = '0.75rem 1rem';
   loadingItem.style.color = 'var(--text-secondary)';
   loadingItem.style.fontSize = '0.9rem';
-  loadingItem.textContent = 'Searching online databases...';
+  loadingItem.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i> Searching online...';
   onlineSearchResults.appendChild(loadingItem);
   
   try {
@@ -1964,10 +1957,10 @@ async function handleOnlineSearch() {
     
     if (results.length === 0) {
       const noResults = document.createElement('div');
-      noResults.style.padding = '1rem';
+      noResults.style.padding = '0.75rem 1rem';
       noResults.style.color = 'var(--text-secondary)';
       noResults.style.fontSize = '0.9rem';
-      noResults.textContent = 'No matching results found online.';
+      noResults.textContent = 'No suggestions found online.';
       onlineSearchResults.appendChild(noResults);
     } else {
       results.forEach(res => {
@@ -1993,8 +1986,6 @@ async function handleOnlineSearch() {
           DOM.formCover.value = res.coverUrl;
           
           onlineSearchResults.classList.add('hidden');
-          onlineSearchInput.value = '';
-          
           showToast(`Auto-filled: "${res.title}"!`, 'success');
         });
         
@@ -2003,21 +1994,15 @@ async function handleOnlineSearch() {
     }
   } catch (error) {
     console.error('Online search failed:', error);
-    showToast('Failed to fetch online suggestions', 'error');
     onlineSearchResults.classList.add('hidden');
-  } finally {
-    onlineSearchBtn.disabled = false;
-    onlineSearchBtn.innerHTML = originalBtnHtml;
   }
 }
 
 function openModal(item = null, defaultStatus = null, defaultCategory = null) {
   DOM.itemForm.reset();
   
-  // Reset online search input & hide results
-  const onlineSearchInput = document.getElementById('online-search-input');
+  // Hide online search results dropdown
   const onlineSearchResults = document.getElementById('online-search-results');
-  if (onlineSearchInput) onlineSearchInput.value = '';
   if (onlineSearchResults) onlineSearchResults.classList.add('hidden');
   
   populateCategorySelect();

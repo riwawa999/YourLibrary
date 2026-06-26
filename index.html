@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 
   <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -306,22 +306,10 @@
         <!-- Hidden Category selector to support script populating without modifications -->
         <select id="form-type" style="display: none;" required></select>
 
-        <!-- Online Search Bar (Auto-Fill) -->
-        <div class="form-group online-search-group">
-          <label for="online-search-input">Search Web to Auto-Fill (Optional)</label>
-          <div class="online-search-bar">
-            <input type="text" id="online-search-input" placeholder="Search book, drama, manga, anime online...">
-            <button type="button" id="online-search-btn" class="btn btn-secondary">
-              <i class="fa-solid fa-magnifying-glass"></i> Search
-            </button>
-          </div>
-          <div id="online-search-results" class="online-search-results hidden"></div>
-        </div>
-
-        <div class="form-group">
+        <div class="form-group" style="position: relative;">
           <label for="form-title">Title <span class="required">*</span></label>
-          <input type="text" id="form-title" placeholder="e.g., Norwegian Wood, Stranger Things" list="suggested-titles" required>
-          <datalist id="suggested-titles"></datalist>
+          <input type="text" id="form-title" placeholder="e.g., Norwegian Wood, Stranger Things" required autocomplete="off">
+          <div id="online-search-results" class="online-search-results hidden"></div>
         </div>
 
         <div class="form-row">
@@ -413,6 +401,6 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Custom Javascript -->
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
