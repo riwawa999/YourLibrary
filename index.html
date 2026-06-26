@@ -19,6 +19,11 @@
   
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="style.css?v=3">
+
+  <!-- Firebase Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="light-theme">
   <!-- Decorative Ambient Gradients -->
@@ -39,6 +44,7 @@
     </div>
     
     <div class="sidebar-content">
+      <div class="sidebar-profile" id="sidebar-profile"></div>
       <nav class="sidebar-nav" id="sidebar-nav">
         <!-- Dynamically populated: Dashboard, Dynamic Category Pages, Settings -->
       </nav>
@@ -202,6 +208,43 @@
         </header>
 
         <div class="settings-grid">
+          <!-- Firebase Cloud Sync Card -->
+          <section class="settings-card firebase-settings-card" id="firebase-settings-card">
+            <div class="settings-card-header">
+              <h3><i class="fa-solid fa-cloud"></i> Firebase Cloud Sync</h3>
+            </div>
+            <p class="section-desc">Sync your library data to the cloud using your own private, free Firebase database. <a href="#" class="guide-toggle-link" id="guide-toggle-btn">View Setup Guide</a></p>
+            
+            <div class="firebase-status-banner local" id="firebase-status-banner">
+              <div class="status-indicator"></div>
+              <span class="status-text" id="firebase-status-text">Local Storage Mode</span>
+            </div>
+
+            <div class="guide-content hidden" id="firebase-guide">
+              <ol class="setup-steps">
+                <li>Create a project on the <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a> (free).</li>
+                <li>Add a **Web App** (click <code>&lt;/&gt;</code>) to get your configuration object.</li>
+                <li>Enable **Google Sign-In** in *Authentication > Sign-in method*.</li>
+                <li>Create a **Cloud Firestore** database, choosing a location and starter rules (test mode or user-locked).</li>
+                <li>Paste the configuration object below:</li>
+              </ol>
+            </div>
+
+            <div class="form-group">
+              <label for="firebase-config-input">Firebase Config Object (JSON or JS snippet)</label>
+              <textarea id="firebase-config-input" rows="5" placeholder='{&#10;  "apiKey": "...",&#10;  "authDomain": "...",&#10;  "projectId": "..."&#10;}'></textarea>
+            </div>
+
+            <div class="firebase-actions">
+              <button id="firebase-save-btn" class="btn btn-primary">
+                <i class="fa-solid fa-cloud-arrow-up"></i> <span>Save & Connect</span>
+              </button>
+              <button id="firebase-disconnect-btn" class="btn btn-secondary" style="display: none;">
+                <i class="fa-solid fa-unlink"></i> <span>Disconnect</span>
+              </button>
+            </div>
+          </section>
+
           <!-- Category Manager Card -->
           <section class="settings-card">
             <div class="settings-card-header">

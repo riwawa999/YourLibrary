@@ -3,39 +3,39 @@
    ========================================================================== */
 :root {
   /* Common Colors */
-  --color-violet: #8b5cf6;
-  --color-violet-glow: rgba(139, 92, 246, 0.15);
-  --color-rose: #ec4899;
-  --color-rose-glow: rgba(236, 72, 153, 0.15);
-  --color-amber: #f59e0b;
-  --color-blue: #3b82f6;
-  --color-green: #10b981;
-  --color-red: #ef4444;
-  --color-red-hover: #dc2626;
+  --color-violet: #86868b; /* Apple Muted Gray */
+  --color-violet-glow: rgba(134, 134, 139, 0.05);
+  --color-rose: #1d1d1f; /* Apple Matte Black */
+  --color-rose-glow: rgba(29, 29, 31, 0.04);
+  --color-amber: #b59a7c; /* Champagne Gold */
+  --color-blue: #0071e3; /* Apple Link Blue */
+  --color-green: #1d7f3a; /* Apple Forest Green */
+  --color-red: #ff453a; /* Apple System Red */
+  --color-red-hover: #ff3b30;
 
-  /* Font Families */
-  --font-display: 'Outfit', 'Noto Sans JP', sans-serif;
-  --font-body: 'Outfit', 'Noto Sans JP', sans-serif;
+  /* Font Families (Apple SF Pro System Stack) */
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro JP", "SF Pro Display", "SF Pro Text", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro JP", "SF Pro Text", "SF Pro Display", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
 
   /* Theme Transitions */
   --transition-speed: 0.3s;
   --transition-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Theme Variables (Pinkwhite only) */
-  --bg-primary: #fff9fb;
-  --bg-secondary: rgba(255, 242, 246, 0.7);
-  --bg-tertiary: rgba(255, 224, 233, 0.8);
-  --text-primary: #3d1d28;
-  --text-secondary: #855a69;
-  --text-tertiary: #bfa1ac;
-  --border-color: rgba(236, 72, 153, 0.12);
-  --border-focus: rgba(236, 72, 153, 0.5);
-  --border-glow: rgba(236, 72, 153, 0.15);
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --card-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.06);
-  --modal-bg: rgba(255, 253, 254, 0.96);
-  --input-bg: rgba(255, 255, 255, 0.9);
+  /* Theme Variables (Sleek Apple Aesthetic) */
+  --bg-primary: #ffffff; /* Pure White */
+  --bg-secondary: rgba(245, 245, 247, 0.75); /* Apple Light Gray */
+  --bg-tertiary: rgba(228, 228, 231, 0.8); /* Zinc medium */
+  --text-primary: #1d1d1f; /* Apple Text Primary */
+  --text-secondary: #86868b; /* Apple Text Secondary */
+  --text-tertiary: #a1a1aa; /* Light Muted Grey */
+  --border-color: rgba(0, 0, 0, 0.08); /* Crisp subtle borders */
+  --border-focus: rgba(0, 113, 227, 0.6); /* Apple blue focus ring */
+  --border-glow: rgba(0, 113, 227, 0.1);
+  --card-bg: rgba(255, 255, 255, 0.88); /* Clean white card base */
+  --card-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.04); /* Soft subtle shadows */
+  --modal-bg: rgba(255, 255, 255, 0.98);
+  --input-bg: #ffffff;
 }
 
 /* ==========================================================================
@@ -71,6 +71,7 @@ body {
   opacity: 0.15;
   pointer-events: none;
   transition: opacity 1s var(--transition-smooth);
+  display: none !important; /* Force pure white backdrop */
 }
 
 .bg-violet {
@@ -178,7 +179,7 @@ body.light-theme .ambient-glow {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.35);
+  box-shadow: 0 6px 20px rgba(9, 9, 11, 0.15);
   opacity: 0.95;
 }
 
@@ -289,12 +290,12 @@ body.light-theme .ambient-glow {
 }
 
 .icon-violet {
-  background-color: rgba(139, 92, 246, 0.12);
+  background-color: rgba(9, 9, 11, 0.06);
   color: var(--color-violet);
 }
 
 .icon-rose {
-  background-color: rgba(236, 72, 153, 0.12);
+  background-color: rgba(9, 9, 11, 0.06);
   color: var(--color-rose);
 }
 
@@ -589,7 +590,7 @@ body.light-theme .ambient-glow {
 }
 
 body.light-theme .card:hover {
-  box-shadow: 0 12px 40px 0 rgba(236, 72, 153, 0.12);
+  box-shadow: 0 12px 40px 0 rgba(9, 9, 11, 0.08);
 }
 
 /* Cover Image Area */
@@ -673,38 +674,38 @@ body.light-theme .card:hover {
 }
 
 .badge-type-book {
-  background-color: rgba(99, 102, 241, 0.12);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  color: #6366f1;
+  background-color: rgba(9, 9, 11, 0.05);
+  border: 1px solid rgba(9, 9, 11, 0.15);
+  color: var(--text-secondary);
 }
 
 .badge-type-drama {
-  background-color: rgba(236, 72, 153, 0.12);
-  border: 1px solid rgba(236, 72, 153, 0.25);
-  color: #ec4899;
+  background-color: rgba(9, 9, 11, 0.05);
+  border: 1px solid rgba(9, 9, 11, 0.15);
+  color: var(--text-secondary);
 }
 
 .badge-status.planning {
-  background-color: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  color: #d97706;
+  background-color: rgba(134, 134, 139, 0.08);
+  border: 1px solid rgba(134, 134, 139, 0.2);
+  color: #86868b;
 }
 
 .badge-status.reading {
-  background-color: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  color: #2563eb;
+  background-color: rgba(0, 113, 227, 0.06);
+  border: 1px solid rgba(0, 113, 227, 0.15);
+  color: #0071e3;
 }
 
 .badge-status.completed {
-  background-color: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  color: #059669;
+  background-color: rgba(29, 127, 58, 0.06);
+  border: 1px solid rgba(29, 127, 58, 0.15);
+  color: #1d7f3a;
 }
 
 .badge-language {
   background-color: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(236, 72, 153, 0.15);
+  border: 1px solid rgba(9, 9, 11, 0.1);
   color: var(--text-secondary);
 }
 
@@ -868,7 +869,7 @@ body.light-theme .card:hover {
 }
 
 body.light-theme .modal-container {
-  box-shadow: 0 20px 50px rgba(236, 72, 153, 0.15);
+  box-shadow: 0 20px 50px rgba(9, 9, 11, 0.1);
 }
 
 .modal-overlay.active .modal-container {
@@ -1210,7 +1211,7 @@ body.light-theme .modal-container {
 }
 
 body.light-theme .sidebar-menu {
-  box-shadow: 0 0 50px rgba(236, 72, 153, 0.08);
+  box-shadow: 0 0 50px rgba(9, 9, 11, 0.04);
 }
 
 .sidebar-menu.active {
@@ -1269,6 +1270,8 @@ body.light-theme .sidebar-menu {
   flex-grow: 1;
   padding: 1.5rem 1rem;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Sidebar Navigation */
@@ -1276,6 +1279,7 @@ body.light-theme .sidebar-menu {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  flex-grow: 1;
 }
 
 .sidebar-nav-item {
@@ -1504,7 +1508,7 @@ body.light-theme .sidebar-nav-item.active {
 }
 
 .category-item:hover {
-  border-color: rgba(236, 72, 153, 0.25);
+  border-color: rgba(9, 9, 11, 0.25);
   transform: translateX(2px);
 }
 
@@ -1893,5 +1897,267 @@ body.light-theme .sidebar-nav-item.active {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   FIREBASE & CLOUD SYNC STYLING
+   ========================================================================== */
+
+/* Sidebar User Profile */
+.sidebar-profile {
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-logged-out {
+  width: 100%;
+}
+
+/* Premium Google Sign-In Button */
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s var(--transition-smooth);
+}
+
+.btn-google i {
+  color: var(--color-rose);
+  font-size: 1rem;
+}
+
+.btn-google:hover {
+  background-color: var(--bg-secondary);
+  border-color: var(--color-rose);
+  box-shadow: 0 4px 12px var(--color-rose-glow);
+  transform: translateY(-1px);
+}
+
+.btn-google:active {
+  transform: translateY(0);
+}
+
+/* Logged In Profile Card */
+.profile-logged-in {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 14px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.profile-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-rose);
+  box-shadow: 0 2px 6px var(--color-rose-glow);
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-email {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-signout-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s var(--transition-smooth);
+}
+
+.profile-signout-btn:hover {
+  color: var(--color-red);
+  background-color: rgba(239, 68, 68, 0.08);
+}
+
+/* Firebase Settings Card */
+.firebase-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid transparent;
+}
+
+.firebase-status-banner.local {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.firebase-status-banner.local .status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #94a3b8;
+  box-shadow: 0 0 8px rgba(148, 163, 184, 0.5);
+}
+
+.firebase-status-banner.connected {
+  background-color: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: var(--color-green);
+}
+
+.firebase-status-banner.connected .status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-green);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  animation: pulse 2s infinite;
+}
+
+.firebase-status-banner.error {
+  background-color: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--color-red);
+}
+
+.firebase-status-banner.error .status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-red);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.guide-toggle-link {
+  color: var(--color-rose);
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.guide-toggle-link:hover {
+  text-decoration: underline;
+}
+
+.guide-content {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.setup-steps {
+  padding-left: 1.25rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.setup-steps li code {
+  background-color: var(--bg-tertiary);
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  font-family: monospace;
+  color: var(--color-rose);
+}
+
+.firebase-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.firebase-actions .btn {
+  flex: 1;
+}
+
+.settings-card textarea {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  outline: none;
+  transition: all var(--transition-speed) var(--transition-smooth);
+  width: 100%;
+  resize: vertical;
+  margin-top: 0.35rem;
+}
+
+.settings-card textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--border-glow);
+}
+
+/* Highlight flash animation for dynamic scroll references */
+.highlight-flash {
+  animation: flashHighlight 1.5s ease-out;
+}
+
+@keyframes flashHighlight {
+  0% { border-color: var(--color-rose); box-shadow: 0 0 20px var(--color-rose-glow); }
+  100% { border-color: var(--border-color); box-shadow: var(--card-shadow); }
+}
+
 
 

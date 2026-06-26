@@ -18,7 +18,10 @@ let state = {
     status: 'all', // 'all' | 'planning' | 'reading' | 'completed'
     language: 'all', // 'all' | any language name
     sortBy: 'newest' // 'newest' | 'oldest' | 'rating-desc' | 'rating-asc' | 'title'
-  }
+  },
+  user: null,
+  db: null,
+  isSyncing: false
 };
 
 // ==========================================================================
@@ -224,18 +227,447 @@ function loadData() {
     state.items = getMockItems();
     saveItems();
   }
+
+  // Initialize Firebase (if config exists)
+  initFirebaseFromSavedConfig();
 }
 
 function saveItems() {
   localStorage.setItem('yl_items', JSON.stringify(state.items));
+  triggerCloudSave();
 }
 
 function saveCategories() {
   localStorage.setItem('yl_categories', JSON.stringify(state.categories));
+  triggerCloudSave();
 }
 
 function saveLanguages() {
   localStorage.setItem('yl_languages', JSON.stringify(state.languages));
+  triggerCloudSave();
+}
+
+// ==========================================================================
+// FIREBASE CLOUD SYNC & AUTHENTICATION
+// ==========================================================================
+async function initFirebaseFromSavedConfig() {
+  const savedConfigStr = localStorage.getItem('yl_firebase_config');
+  const configInput = document.getElementById('firebase-config-input');
+  
+  if (savedConfigStr && configInput && !configInput.value.trim()) {
+    try {
+      configInput.value = JSON.stringify(JSON.parse(savedConfigStr), null, 2);
+    } catch (e) {
+      configInput.value = savedConfigStr;
+    }
+  }
+
+  if (!savedConfigStr) {
+    updateFirebaseUIStatus('local');
+    renderSidebarProfile();
+    return;
+  }
+  
+  try {
+    const config = JSON.parse(savedConfigStr);
+    updateFirebaseUIStatus('connecting');
+    
+    if (firebase.apps.length > 0) {
+      await firebase.app().delete();
+    }
+    firebase.initializeApp(config);
+    
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (user) {
+        state.user = user;
+        state.db = firebase.firestore();
+        updateFirebaseUIStatus('connected', user.email);
+        renderSidebarProfile();
+        
+        state.isSyncing = true;
+        await syncFromCloud();
+        state.isSyncing = false;
+      } else {
+        state.user = null;
+        state.db = null;
+        updateFirebaseUIStatus('connected_logged_out');
+        renderSidebarProfile();
+      }
+    });
+  } catch (e) {
+    console.error('Firebase initialization failed:', e);
+    updateFirebaseUIStatus('error', e.message);
+    renderSidebarProfile();
+  }
+}
+
+function updateFirebaseUIStatus(status, detail = '') {
+  const banner = document.getElementById('firebase-status-banner');
+  const text = document.getElementById('firebase-status-text');
+  const disconnectBtn = document.getElementById('firebase-disconnect-btn');
+  
+  if (!banner || !text) return;
+  
+  banner.className = 'firebase-status-banner ' + (status === 'connecting' ? 'local' : (status.startsWith('connected') ? 'connected' : (status === 'error' ? 'error' : 'local')));
+  
+  if (status === 'local') {
+    text.textContent = 'Local Storage Mode';
+    if (disconnectBtn) disconnectBtn.style.display = 'none';
+  } else if (status === 'connecting') {
+    text.textContent = 'Connecting to Firebase...';
+  } else if (status === 'connected') {
+    text.textContent = `Connected (Logged in: ${detail})`;
+    if (disconnectBtn) disconnectBtn.style.display = 'inline-flex';
+  } else if (status === 'connected_logged_out') {
+    text.textContent = 'Connected (Logged out)';
+    if (disconnectBtn) disconnectBtn.style.display = 'inline-flex';
+  } else if (status === 'error') {
+    text.textContent = `Connection Error: ${detail}`;
+    if (disconnectBtn) disconnectBtn.style.display = 'inline-flex';
+  }
+}
+
+async function handleFirebaseSave() {
+  const configInput = document.getElementById('firebase-config-input');
+  if (!configInput) return;
+  
+  const rawInput = configInput.value.trim();
+  if (!rawInput) {
+    showToast('Please paste a valid Firebase configuration object.', 'error');
+    return;
+  }
+  
+  try {
+    const config = parseFirebaseConfig(rawInput);
+    
+    // Save to LocalStorage
+    localStorage.setItem('yl_firebase_config', JSON.stringify(config));
+    showToast('Firebase configuration saved! Connecting...', 'info');
+    
+    // Initialize
+    await initFirebaseFromSavedConfig();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function handleFirebaseDisconnect() {
+  if (confirm('Are you sure you want to disconnect from Firebase? The app will return to local storage mode.')) {
+    try {
+      if (firebase.apps.length > 0) {
+        if (firebase.auth()) {
+          await firebase.auth().signOut();
+        }
+        await firebase.app().delete();
+      }
+    } catch (e) {
+      console.error('Error during teardown:', e);
+    }
+    
+    localStorage.removeItem('yl_firebase_config');
+    localStorage.removeItem('yl_last_uid');
+    state.user = null;
+    state.db = null;
+    
+    const configInput = document.getElementById('firebase-config-input');
+    if (configInput) configInput.value = '';
+    
+    updateFirebaseUIStatus('local');
+    renderSidebarProfile();
+    showToast('Disconnected from Firebase. Working locally.', 'info');
+    
+    loadLocalDataOnly();
+    
+    renderSidebarNav();
+    if (state.currentView === 'dashboard') {
+      navigate('dashboard');
+    } else if (state.currentView === 'settings') {
+      renderSettingsPage();
+    } else {
+      navigate('dashboard');
+    }
+  }
+}
+
+function loadLocalDataOnly() {
+  // Load Categories
+  const savedCategories = localStorage.getItem('yl_categories');
+  if (savedCategories) {
+    try {
+      state.categories = JSON.parse(savedCategories);
+    } catch (e) {}
+  }
+  
+  // Load Languages
+  const savedLanguages = localStorage.getItem('yl_languages');
+  if (savedLanguages) {
+    try {
+      state.languages = JSON.parse(savedLanguages);
+    } catch (e) {}
+  }
+  
+  // Load Items
+  const savedItems = localStorage.getItem('yl_items');
+  if (savedItems) {
+    try {
+      state.items = JSON.parse(savedItems);
+    } catch (e) {
+      state.items = [];
+    }
+  }
+}
+
+function parseFirebaseConfig(rawInput) {
+  let str = rawInput.trim();
+  
+  // Find the position of 'apiKey' (either quoted or unquoted)
+  let apiKeyIdx = str.indexOf('apiKey');
+  if (apiKeyIdx === -1) {
+    apiKeyIdx = str.indexOf('"apiKey"');
+    if (apiKeyIdx === -1) {
+      apiKeyIdx = str.indexOf("'apiKey'");
+    }
+  }
+  
+  if (apiKeyIdx === -1) {
+    throw new Error('Could not find "apiKey" inside the configuration block. Please ensure you copied the complete firebaseConfig object.');
+  }
+  
+  // Find the opening brace '{' of the config object right before 'apiKey'
+  const startIdx = str.lastIndexOf('{', apiKeyIdx);
+  if (startIdx === -1) {
+    throw new Error('Could not find the opening brace "{" before "apiKey". Please verify your input.');
+  }
+  
+  // Find the matching closing brace '}' starting from startIdx
+  let braceCount = 0;
+  let endIdx = -1;
+  for (let i = startIdx; i < str.length; i++) {
+    if (str[i] === '{') {
+      braceCount++;
+    } else if (str[i] === '}') {
+      braceCount--;
+      if (braceCount === 0) {
+        endIdx = i;
+        break;
+      }
+    }
+  }
+  
+  if (endIdx === -1) {
+    throw new Error('Could not find the matching closing brace "}" for the configuration object.');
+  }
+  
+  let body = str.substring(startIdx, endIdx + 1);
+  
+  // Remove comments (single line and multi line)
+  body = body.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+  
+  // Convert JS object format to valid JSON
+  // 1. Ensure keys are double-quoted
+  body = body.replace(/([{,]\s*)([a-zA-Z0-9_$]+)\s*:/g, '$1"$2":');
+  
+  // 2. Replace single quotes around values with double quotes
+  body = body.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, ': "$1"');
+  
+  // 3. Remove trailing commas before } or ]
+  body = body.replace(/,\s*([}\]])/g, '$1');
+  
+  try {
+    const parsed = JSON.parse(body);
+    if (!parsed.apiKey || !parsed.authDomain || !parsed.projectId) {
+      throw new Error('Missing required fields: apiKey, authDomain, or projectId.');
+    }
+    return parsed;
+  } catch (e) {
+    console.error('JS-to-JSON cleaning failed. Input was:', rawInput, 'Error:', e);
+    throw new Error('Invalid JSON format. Please copy the complete firebaseConfig object: ' + e.message);
+  }
+}
+
+async function handleSignIn() {
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await firebase.auth().signInWithPopup(provider);
+    showToast('Signed in successfully!', 'success');
+  } catch (e) {
+    console.error('Sign-in error:', e);
+    showToast('Failed to sign in: ' + e.message, 'error');
+  }
+}
+
+async function handleSignOut() {
+  try {
+    await firebase.auth().signOut();
+    showToast('Signed out successfully!', 'success');
+  } catch (e) {
+    console.error('Sign-out error:', e);
+    showToast('Failed to sign out: ' + e.message, 'error');
+  }
+}
+
+function renderSidebarProfile() {
+  const container = document.getElementById('sidebar-profile');
+  if (!container) return;
+  
+  if (state.user) {
+    container.innerHTML = `
+      <div class="profile-logged-in">
+        <img src="${state.user.photoURL || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'}" alt="Avatar" class="profile-avatar">
+        <div class="profile-info">
+          <div class="profile-name">${escapeHtml(state.user.displayName || 'User')}</div>
+          <div class="profile-email">${escapeHtml(state.user.email || '')}</div>
+        </div>
+        <button id="google-signout-btn" class="profile-signout-btn" title="Sign Out">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+    `;
+    const btn = document.getElementById('google-signout-btn');
+    if (btn) btn.addEventListener('click', handleSignOut);
+  } else {
+    const isFirebaseConfigured = !!localStorage.getItem('yl_firebase_config');
+    if (isFirebaseConfigured) {
+      container.innerHTML = `
+        <div class="profile-logged-out">
+          <button id="google-signin-btn" class="btn-google">
+            <i class="fa-brands fa-google"></i>
+            <span>Sign in with Google</span>
+          </button>
+        </div>
+      `;
+      const btn = document.getElementById('google-signin-btn');
+      if (btn) btn.addEventListener('click', handleSignIn);
+    } else {
+      container.innerHTML = `
+        <div class="profile-logged-out">
+          <button id="sidebar-setup-cloud-btn" class="btn-google">
+            <i class="fa-solid fa-cloud"></i>
+            <span>Setup Cloud Sync</span>
+          </button>
+        </div>
+      `;
+      const btn = document.getElementById('sidebar-setup-cloud-btn');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          navigate('settings');
+          const card = document.getElementById('firebase-settings-card');
+          if (card) {
+            card.scrollIntoView({ behavior: 'smooth' });
+            card.classList.add('highlight-flash');
+            setTimeout(() => card.classList.remove('highlight-flash'), 1500);
+          }
+        });
+      }
+    }
+  }
+}
+
+async function triggerCloudSave() {
+  if (state.isSyncing || !state.user || !state.db) return;
+  
+  try {
+    const docRef = state.db.collection('users').doc(state.user.uid).collection('data').doc('library');
+    await docRef.set({
+      items: state.items,
+      categories: state.categories,
+      languages: state.languages,
+      updatedAt: new Date().toISOString()
+    });
+    console.log('Successfully synced library to Firestore.');
+  } catch (e) {
+    console.error('Failed to save data to cloud:', e);
+    showToast('Failed to sync to cloud. Working offline.', 'error');
+  }
+}
+
+function mergeLibraryData(localItems, cloudItems) {
+  const mergedMap = new Map();
+  
+  localItems.forEach(item => {
+    mergedMap.set(item.id, item);
+  });
+  
+  cloudItems.forEach(cloudItem => {
+    if (mergedMap.has(cloudItem.id)) {
+      const localItem = mergedMap.get(cloudItem.id);
+      const localTime = new Date(localItem.updatedAt || localItem.createdAt || 0).getTime();
+      const cloudTime = new Date(cloudItem.updatedAt || cloudItem.createdAt || 0).getTime();
+      
+      if (cloudTime >= localTime) {
+        mergedMap.set(cloudItem.id, cloudItem);
+      }
+    } else {
+      mergedMap.set(cloudItem.id, cloudItem);
+    }
+  });
+  
+  return Array.from(mergedMap.values());
+}
+
+function mergeLists(localList, cloudList) {
+  return Array.from(new Set([...localList, ...cloudList]));
+}
+
+async function syncFromCloud() {
+  if (!state.user || !state.db) return;
+  
+  try {
+    const docRef = state.db.collection('users').doc(state.user.uid).collection('data').doc('library');
+    const doc = await docRef.get();
+    
+    const lastUid = localStorage.getItem('yl_last_uid');
+    const isNewUser = lastUid && lastUid !== state.user.uid;
+    
+    localStorage.setItem('yl_last_uid', state.user.uid);
+    
+    if (doc.exists) {
+      const cloudData = doc.data();
+      const cloudItems = cloudData.items || [];
+      const cloudCategories = cloudData.categories || [];
+      const cloudLanguages = cloudData.languages || [];
+      
+      if (isNewUser) {
+        state.items = cloudItems;
+        state.categories = cloudCategories;
+        state.languages = cloudLanguages;
+        showToast('Loaded library for ' + state.user.displayName, 'success');
+      } else {
+        state.items = mergeLibraryData(state.items, cloudItems);
+        state.categories = mergeLists(state.categories, cloudCategories);
+        state.languages = mergeLists(state.languages, cloudLanguages);
+        showToast('Library synced with cloud!', 'success');
+      }
+    } else {
+      if (isNewUser) {
+        state.items = [];
+        state.categories = ["Books", "Dramas", "Mangas", "Animes"];
+        state.languages = ["Japanese", "English", "Korean", "Chinese"];
+        showToast('Created new library for ' + state.user.displayName, 'success');
+      } else {
+        showToast('Uploading local library to cloud...', 'info');
+      }
+    }
+    
+    localStorage.setItem('yl_items', JSON.stringify(state.items));
+    localStorage.setItem('yl_categories', JSON.stringify(state.categories));
+    localStorage.setItem('yl_languages', JSON.stringify(state.languages));
+    
+    await triggerCloudSave();
+    
+    // Refresh active view
+    renderSidebarNav();
+    if (state.currentView === 'dashboard') {
+      renderDashboard();
+    } else if (state.currentView === 'settings') {
+      renderSettingsPage();
+    } else {
+      renderLibraryPage(state.currentView);
+    }
+  } catch (e) {
+    console.error('Error syncing cloud:', e);
+    showToast('Failed to sync cloud: ' + e.message, 'error');
+  }
 }
 
 // ==========================================================================
@@ -359,6 +791,28 @@ function setupEventListeners() {
   DOM.settingsExportBtn.addEventListener('click', exportLibrary);
   DOM.settingsImportBtn.addEventListener('click', () => DOM.importFileInput.click());
   DOM.importFileInput.addEventListener('change', handleImportFile);
+
+  // Firebase Controls (in Settings View)
+  const firebaseSaveBtn = document.getElementById('firebase-save-btn');
+  const firebaseDisconnectBtn = document.getElementById('firebase-disconnect-btn');
+  const guideToggleBtn = document.getElementById('guide-toggle-btn');
+  
+  if (firebaseSaveBtn) {
+    firebaseSaveBtn.addEventListener('click', handleFirebaseSave);
+  }
+  if (firebaseDisconnectBtn) {
+    firebaseDisconnectBtn.addEventListener('click', handleFirebaseDisconnect);
+  }
+  if (guideToggleBtn) {
+    guideToggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const guide = document.getElementById('firebase-guide');
+      if (guide) {
+        guide.classList.toggle('hidden');
+        guideToggleBtn.textContent = guide.classList.contains('hidden') ? 'View Setup Guide' : 'Hide Setup Guide';
+      }
+    });
+  }
 }
 
 // ==========================================================================
@@ -1250,13 +1704,13 @@ function formatDate(dateStr) {
 // Category hashing color manager
 function getCategoryGradient(categoryName) {
   const colors = [
-    ['#ffd1dc', '#ec4899'], // Soft Pink -> Rose
-    ['#fff0f5', '#fda4af'], // Lavender Blush -> Rose Pink
-    ['#ffe4e1', '#fb7185'], // Misty Rose -> Rose 400
-    ['#fce7f3', '#f472b6'], // Cotton Candy -> Pink 400
-    ['#fae8ff', '#e879f9'], // Light Fuchsia -> Fuchsia 400
-    ['#ffe4e6', '#fb7185'], // Rose 100 -> Rose 400
-    ['#fbcfe8', '#db2777']  // Pink 200 -> Pink 600
+    ['#e4e4e7', '#27272a'], // Zinc 200 -> Zinc 800
+    ['#f4f4f5', '#18181b'], // Zinc 100 -> Zinc 900
+    ['#d4d4d8', '#3f3f46'], // Zinc 300 -> Zinc 700
+    ['#e4e4e7', '#52525b'], // Zinc 200 -> Zinc 600
+    ['#a1a1aa', '#09090b'], // Zinc 400 -> Off-black
+    ['#f4f4f5', '#3f3f46'], // Zinc 100 -> Zinc 700
+    ['#e4e4e7', '#18181b']  // Zinc 200 -> Zinc 900
   ];
   let hash = 0;
   for (let i = 0; i < categoryName.length; i++) {
@@ -1516,7 +1970,8 @@ function handleFormSubmit(e) {
         coverUrl: savedCoverUrl,
         startDate: savedStartDate,
         endDate: savedEndDate,
-        notes: savedNotes
+        notes: savedNotes,
+        updatedAt: new Date().toISOString()
       };
       showToast('Record updated successfully!', 'success');
     }
@@ -1534,7 +1989,8 @@ function handleFormSubmit(e) {
       startDate: savedStartDate,
       endDate: savedEndDate,
       notes: savedNotes,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     state.items.unshift(newItem); // Add to the front
     showToast('Record added successfully!', 'success');
