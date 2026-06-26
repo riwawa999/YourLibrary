@@ -727,6 +727,12 @@ function setupEventListeners() {
   DOM.sidebarCloseBtn.addEventListener('click', () => toggleSidebar(false));
   DOM.sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
 
+  // Logo Brand navigates to Dashboard
+  const logoBrand = document.getElementById('logo-brand');
+  if (logoBrand) {
+    logoBrand.addEventListener('click', () => navigate('dashboard'));
+  }
+
   // Category Add Form Submit (inside settings page)
   DOM.addCategoryForm.addEventListener('submit', handleAddCategory);
 

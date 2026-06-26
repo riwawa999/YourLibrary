@@ -118,6 +118,18 @@ body.light-theme .ambient-glow {
   gap: 1rem;
 }
 
+.logo-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: opacity var(--transition-speed) var(--transition-smooth);
+}
+
+.logo-brand:hover {
+  opacity: 0.8;
+}
+
 .logo-icon {
   width: 3rem;
   height: 3rem;
