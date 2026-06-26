@@ -659,51 +659,53 @@ body.light-theme .card:hover {
 }
 
 .badge {
-  padding: 0.3rem 0.7rem;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.68rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #fff;
+  letter-spacing: 0.03em;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .badge-type-book {
-  background-color: rgba(99, 102, 241, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background-color: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #6366f1;
 }
 
 .badge-type-drama {
-  background-color: rgba(236, 72, 153, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.badge-status {
-  background-color: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(236, 72, 153, 0.12);
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  color: #ec4899;
 }
 
 .badge-status.planning {
-  border-color: rgba(245, 158, 11, 0.4);
-  color: var(--color-amber);
+  background-color: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #d97706;
 }
 
 .badge-status.reading {
-  border-color: rgba(59, 130, 246, 0.4);
-  color: var(--color-blue);
+  background-color: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #2563eb;
 }
 
 .badge-status.completed {
-  border-color: rgba(16, 185, 129, 0.4);
-  color: var(--color-green);
+  background-color: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #059669;
 }
 
 .badge-language {
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(236, 72, 153, 0.15);
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 
 

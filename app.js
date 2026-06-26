@@ -1083,7 +1083,7 @@ function createCard(item) {
     : '';
 
   const grad = getCategoryGradient(item.type || 'default');
-  const typeBadgeStyle = `background: linear-gradient(135deg, ${grad[0]}cc, ${grad[1]}cc); border: 1px solid ${grad[0]};`;
+  const typeBadgeStyle = `background-color: ${grad[0]}14; border: 1px solid ${grad[0]}40; color: ${grad[0]};`;
 
   card.innerHTML = `
     <div class="card-cover">
