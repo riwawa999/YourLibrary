@@ -122,13 +122,13 @@ body.light-theme .ambient-glow {
   width: 3rem;
   height: 3rem;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--color-violet), var(--color-rose));
+  background-color: var(--color-rose);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   font-size: 1.4rem;
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 15px var(--color-rose-glow);
 }
 
 .logo-text h1 {
@@ -136,9 +136,7 @@ body.light-theme .ambient-glow {
   font-size: 1.8rem;
   font-weight: 800;
   letter-spacing: -0.025em;
-  background: linear-gradient(to right, var(--text-primary), var(--color-violet));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--color-rose);
 }
 
 .logo-text .subtitle {
@@ -173,14 +171,14 @@ body.light-theme .ambient-glow {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-violet), var(--color-rose));
+  background-color: var(--color-rose);
   color: #fff;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 4px 15px var(--color-rose-glow);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.35);
   opacity: 0.95;
 }
 
