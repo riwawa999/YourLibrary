@@ -787,31 +787,63 @@ function setupEventListeners() {
   // Delete Action in Form
   DOM.formDeleteBtn.addEventListener('click', handleDeleteItem);
 
-  // Dynamic Autocomplete Online Search
+  // Dynamic Autocomplete Online Search (Dual-compatible with cached HTML)
   let searchDebounceTimer = null;
-  DOM.formTitle.addEventListener('input', (e) => {
-    const query = e.target.value.trim();
-    
-    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-    
-    const onlineSearchResults = document.getElementById('online-search-results');
-    if (!onlineSearchResults) return;
-    
-    if (query.length < 2) {
-      onlineSearchResults.classList.add('hidden');
-      return;
-    }
-    
-    searchDebounceTimer = setTimeout(() => {
-      handleOnlineSearch(query);
-    }, 300);
-  });
+
+  const registerInputAutocomplete = (inputEl) => {
+    if (!inputEl) return;
+    inputEl.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      
+      if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+      
+      const onlineSearchResults = document.getElementById('online-search-results');
+      if (!onlineSearchResults) return;
+      
+      if (query.length < 2) {
+        onlineSearchResults.classList.add('hidden');
+        return;
+      }
+
+      // Dynamically re-parent the suggestions list to match the active input container
+      const parent = inputEl.parentNode;
+      parent.style.position = 'relative';
+      parent.appendChild(onlineSearchResults);
+      
+      searchDebounceTimer = setTimeout(() => {
+        handleOnlineSearch(query);
+      }, 300);
+    });
+  };
+
+  registerInputAutocomplete(DOM.formTitle);
+  registerInputAutocomplete(document.getElementById('online-search-input'));
+
+  // Also bind the old search button just in case they click it in cached HTML
+  const onlineSearchBtn = document.getElementById('online-search-btn');
+  if (onlineSearchBtn) {
+    onlineSearchBtn.addEventListener('click', () => {
+      const input = document.getElementById('online-search-input');
+      if (input) {
+        const query = input.value.trim();
+        if (query) {
+          const onlineSearchResults = document.getElementById('online-search-results');
+          if (onlineSearchResults) {
+            const parent = input.parentNode;
+            parent.style.position = 'relative';
+            parent.appendChild(onlineSearchResults);
+          }
+          handleOnlineSearch(query);
+        }
+      }
+    });
+  }
 
   // Click outside search results to close dropdown
   document.addEventListener('click', (e) => {
     const onlineSearchResults = document.getElementById('online-search-results');
     if (onlineSearchResults && !onlineSearchResults.classList.contains('hidden')) {
-      if (!e.target.closest('.form-group')) {
+      if (!e.target.closest('.form-group') && !e.target.closest('.online-search-bar') && !e.target.closest('.online-search-group')) {
         onlineSearchResults.classList.add('hidden');
       }
     }
