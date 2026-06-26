@@ -1704,10 +1704,10 @@ function formatDate(dateStr) {
 // Category hashing color manager
 function getCategoryGradient(categoryName) {
   const colors = [
-    ['#ea4335', '#ea4335'], // Google Red (Books)
-    ['#34a853', '#34a853'], // Google Green (Dramas)
-    ['#4285f4', '#4285f4'], // Google Blue (Mangas)
-    ['#fbbc05', '#fbbc05'], // Google Yellow (Animes)
+    ['#fbbc05', '#fbbc05'], // Google Yellow (Books)
+    ['#4285f4', '#4285f4'], // Google Blue (Dramas)
+    ['#34a853', '#34a853'], // Google Green (Mangas)
+    ['#ea4335', '#ea4335'], // Google Red (Animes)
     ['#a142f4', '#a142f4'], // Google Purple
     ['#fa7b17', '#fa7b17'], // Google Orange
     ['#12b5cb', '#12b5cb'], // Google Cyan
