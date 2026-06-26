@@ -957,7 +957,7 @@ function renderDashboard() {
     if (total === 0) {
       donutChart.style.background = `conic-gradient(var(--border-color) 0% 100%)`;
       state.categories.forEach((category, idx) => {
-        const catColor = `hsl(${(idx * 95) % 360}, 85%, 60%)`;
+        const catColor = getCategoryGradient(category)[0];
         const legendItem = document.createElement('div');
         legendItem.className = 'legend-item';
         legendItem.innerHTML = `
@@ -978,7 +978,7 @@ function renderDashboard() {
         const catItems = state.items.filter(i => i.type === category);
         const catCount = catItems.length;
         const pct = (catCount / total) * 100;
-        const catColor = `hsl(${(idx * 95) % 360}, 85%, 60%)`;
+        const catColor = getCategoryGradient(category)[0];
 
         if (pct > 0) {
           conicParts.push(`${catColor} ${accumulatedPercent}% ${(accumulatedPercent + pct)}%`);
@@ -1704,19 +1704,31 @@ function formatDate(dateStr) {
 // Category hashing color manager
 function getCategoryGradient(categoryName) {
   const colors = [
-    ['#0071e3', '#0071e3'], // Apple Blue
-    ['#ff3b30', '#ff3b30'], // Apple Red
-    ['#34c759', '#34c759'], // Apple Green
-    ['#ff9500', '#ff9500'], // Apple Orange
-    ['#af52de', '#af52de'], // Apple Purple
-    ['#30b0c7', '#30b0c7'], // Apple Teal
-    ['#ff2d55', '#ff2d55']  // Apple Pink
+    ['#ea4335', '#ea4335'], // Google Red (Books)
+    ['#34a853', '#34a853'], // Google Green (Dramas)
+    ['#4285f4', '#4285f4'], // Google Blue (Mangas)
+    ['#fbbc05', '#fbbc05'], // Google Yellow (Animes)
+    ['#a142f4', '#a142f4'], // Google Purple
+    ['#fa7b17', '#fa7b17'], // Google Orange
+    ['#12b5cb', '#12b5cb'], // Google Cyan
+    ['#9aa0a6', '#9aa0a6']  // Google Grey
   ];
-  let hash = 0;
-  for (let i = 0; i < categoryName.length; i++) {
-    hash = categoryName.charCodeAt(i) + ((hash << 5) - hash);
+  
+  let index = -1;
+  if (typeof state !== 'undefined' && state.categories) {
+    index = state.categories.indexOf(categoryName);
   }
-  const index = Math.abs(hash) % colors.length;
+  
+  if (index === -1) {
+    let hash = 0;
+    for (let i = 0; i < categoryName.length; i++) {
+      hash = categoryName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    index = Math.abs(hash) % colors.length;
+  } else {
+    index = index % colors.length;
+  }
+  
   return colors[index];
 }
 
