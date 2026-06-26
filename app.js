@@ -1564,13 +1564,21 @@ function renderList() {
 function updateActiveStatsCard() {
   if (!DOM.categoryStatsSection) return;
   const cards = DOM.categoryStatsSection.querySelectorAll('.stat-card');
+  const grad = getCategoryGradient(state.currentView);
+  
   cards.forEach(card => {
     const status = card.getAttribute('data-status-filter');
     if (status) {
       if (status === state.filters.status) {
         card.classList.add('active');
+        card.style.borderColor = grad[0];
+        card.style.boxShadow = `0 0 15px ${grad[0]}40`; // 25% opacity color glow
+        card.style.backgroundColor = `${grad[0]}0A`; // 4% opacity color tint background
       } else {
         card.classList.remove('active');
+        card.style.borderColor = '';
+        card.style.boxShadow = '';
+        card.style.backgroundColor = '';
       }
     }
   });
