@@ -858,7 +858,7 @@ function renderSidebarNav() {
     catLink.innerHTML = `
       <i class="${iconClass}"></i>
       <span>${escapeHtml(category)}</span>
-      <span class="category-dot" style="background: linear-gradient(135deg, ${colors[0]}, ${colors[1]}); margin-left: auto;"></span>
+      <span class="category-dot" style="background-color: ${colors[0]}; margin-left: auto;"></span>
     `;
     catLink.addEventListener('click', () => navigate(category));
     DOM.sidebarNav.appendChild(catLink);
@@ -1240,7 +1240,7 @@ function renderSettingsPage() {
     
     li.innerHTML = `
       <div class="category-name-wrapper">
-        <span class="category-dot" style="background: linear-gradient(135deg, ${colors[0]}, ${colors[1]});"></span>
+        <span class="category-dot" style="background-color: ${colors[0]};"></span>
         <span>${escapeHtml(category)}</span>
       </div>
       <button class="category-delete-btn" title="Delete Category">
@@ -1503,7 +1503,7 @@ function createCard(item) {
     if (lowerType.includes('anime')) iconClass = 'fa-solid fa-clapperboard';
 
     coverHtml = `
-      <div class="card-cover-placeholder" style="background: linear-gradient(135deg, ${gradColors[0]}, ${gradColors[1]});">
+      <div class="card-cover-placeholder" style="background-color: ${gradColors[0]};">
         <i class="${iconClass}"></i>
         <span>${escapeHtml(item.title)}</span>
       </div>
@@ -1704,13 +1704,13 @@ function formatDate(dateStr) {
 // Category hashing color manager
 function getCategoryGradient(categoryName) {
   const colors = [
-    ['#e4e4e7', '#27272a'], // Zinc 200 -> Zinc 800
-    ['#f4f4f5', '#18181b'], // Zinc 100 -> Zinc 900
-    ['#d4d4d8', '#3f3f46'], // Zinc 300 -> Zinc 700
-    ['#e4e4e7', '#52525b'], // Zinc 200 -> Zinc 600
-    ['#a1a1aa', '#09090b'], // Zinc 400 -> Off-black
-    ['#f4f4f5', '#3f3f46'], // Zinc 100 -> Zinc 700
-    ['#e4e4e7', '#18181b']  // Zinc 200 -> Zinc 900
+    ['#0071e3', '#0071e3'], // Apple Blue
+    ['#ff3b30', '#ff3b30'], // Apple Red
+    ['#34c759', '#34c759'], // Apple Green
+    ['#ff9500', '#ff9500'], // Apple Orange
+    ['#af52de', '#af52de'], // Apple Purple
+    ['#30b0c7', '#30b0c7'], // Apple Teal
+    ['#ff2d55', '#ff2d55']  // Apple Pink
   ];
   let hash = 0;
   for (let i = 0; i < categoryName.length; i++) {
