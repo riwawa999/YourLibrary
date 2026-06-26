@@ -1821,10 +1821,41 @@ function populateCategorySelect() {
   });
 }
 
+function populateSuggestions() {
+  const suggestedTitles = document.getElementById('suggested-titles');
+  const suggestedCreators = document.getElementById('suggested-creators');
+  
+  if (!suggestedTitles || !suggestedCreators) return;
+  
+  suggestedTitles.innerHTML = '';
+  suggestedCreators.innerHTML = '';
+  
+  const titles = new Set();
+  const creators = new Set();
+  
+  state.items.forEach(item => {
+    if (item.title) titles.add(item.title.trim());
+    if (item.creator) creators.add(item.creator.trim());
+  });
+  
+  Array.from(titles).sort().forEach(title => {
+    const option = document.createElement('option');
+    option.value = title;
+    suggestedTitles.appendChild(option);
+  });
+  
+  Array.from(creators).sort().forEach(creator => {
+    const option = document.createElement('option');
+    option.value = creator;
+    suggestedCreators.appendChild(option);
+  });
+}
+
 function openModal(item = null, defaultStatus = null, defaultCategory = null) {
   DOM.itemForm.reset();
   
   populateCategorySelect();
+  populateSuggestions();
   
   // Pre-fill Language lists
   const defaultLang = item ? item.language : 'Japanese';
