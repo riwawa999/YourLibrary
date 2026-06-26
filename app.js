@@ -1201,7 +1201,8 @@ function renderLibraryPage(categoryName) {
   if (isMyList) {
     DOM.libraryTitle.textContent = `My List`;
     DOM.librarySubtitle.textContent = `Manage and track your bookmarked items.`;
-    DOM.addItemBtn.style.display = 'none'; // Hide add button since bookmarks are added from items
+    DOM.addItemBtn.style.display = 'inline-flex';
+    DOM.addBtnText.textContent = `Add Item`;
   } else {
     DOM.libraryTitle.textContent = `${categoryName} Collection`;
     DOM.librarySubtitle.textContent = `Manage and track your ${categoryName.toLowerCase()} logs.`;
@@ -2145,7 +2146,7 @@ function openModal(item = null, defaultStatus = null, defaultCategory = null) {
     DOM.formDeleteBtn.style.display = 'none';
 
     // Contextual Pre-fill category
-    if (state.currentView !== 'dashboard' && state.currentView !== 'settings') {
+    if (state.currentView !== 'dashboard' && state.currentView !== 'settings' && state.currentView !== 'mylist') {
       DOM.formType.value = state.currentView;
     } else if (defaultCategory) {
       DOM.formType.value = defaultCategory;
@@ -2157,7 +2158,7 @@ function openModal(item = null, defaultStatus = null, defaultCategory = null) {
   }
   
   if (DOM.formMyList) {
-    DOM.formMyList.checked = item ? (item.myList || false) : false;
+    DOM.formMyList.checked = item ? (item.myList || false) : (state.currentView === 'mylist');
   }
   
   updateCreatorLabel();
