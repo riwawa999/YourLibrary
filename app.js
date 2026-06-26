@@ -1154,6 +1154,7 @@ function renderDashboard() {
       }
 
       const ratingPct = (parseFloat(avgRating) / 5) * 100;
+      const catColor = getCategoryGradient(category)[0];
 
       const rowB = document.createElement('div');
       rowB.className = 'category-rating-row';
@@ -1164,7 +1165,7 @@ function renderDashboard() {
           <span class="category-avg-rating"><i class="fa-solid fa-star"></i> ${avgRating}</span>
         </div>
         <div class="category-rating-bar">
-          <div class="rating-bar-fill" style="width: ${ratingPct}%;"></div>
+          <div class="rating-bar-fill" style="width: ${ratingPct}%; background: ${catColor};"></div>
         </div>
         <div class="category-top-item">
           <i class="fa-solid fa-award"></i> Top Rated: <span>${escapeHtml(topItemTitle)}</span>
