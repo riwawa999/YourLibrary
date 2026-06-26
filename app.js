@@ -787,6 +787,30 @@ function setupEventListeners() {
   // Delete Action in Form
   DOM.formDeleteBtn.addEventListener('click', handleDeleteItem);
 
+  // Online Search Event Listeners
+  const onlineSearchBtn = document.getElementById('online-search-btn');
+  const onlineSearchInput = document.getElementById('online-search-input');
+  const onlineSearchResults = document.getElementById('online-search-results');
+
+  if (onlineSearchBtn && onlineSearchInput) {
+    onlineSearchBtn.addEventListener('click', handleOnlineSearch);
+    onlineSearchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleOnlineSearch();
+      }
+    });
+  }
+
+  // Click outside search results to close dropdown
+  document.addEventListener('click', (e) => {
+    if (onlineSearchResults && !onlineSearchResults.classList.contains('hidden')) {
+      if (!e.target.closest('.online-search-group')) {
+        onlineSearchResults.classList.add('hidden');
+      }
+    }
+  });
+
   // Export & Import Database Bindings (in Settings View)
   DOM.settingsExportBtn.addEventListener('click', exportLibrary);
   DOM.settingsImportBtn.addEventListener('click', () => DOM.importFileInput.click());
@@ -1851,8 +1875,150 @@ function populateSuggestions() {
   });
 }
 
+async function handleOnlineSearch() {
+  const onlineSearchInput = document.getElementById('online-search-input');
+  const onlineSearchResults = document.getElementById('online-search-results');
+  const onlineSearchBtn = document.getElementById('online-search-btn');
+  
+  if (!onlineSearchInput || !onlineSearchResults || !onlineSearchBtn) return;
+  
+  const query = onlineSearchInput.value.trim();
+  if (!query) {
+    showToast('Please enter search query', 'error');
+    return;
+  }
+  
+  const originalBtnHtml = onlineSearchBtn.innerHTML;
+  onlineSearchBtn.disabled = true;
+  onlineSearchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+  
+  onlineSearchResults.innerHTML = '';
+  onlineSearchResults.classList.remove('hidden');
+  
+  const loadingItem = document.createElement('div');
+  loadingItem.style.padding = '1rem';
+  loadingItem.style.color = 'var(--text-secondary)';
+  loadingItem.style.fontSize = '0.9rem';
+  loadingItem.textContent = 'Searching online databases...';
+  onlineSearchResults.appendChild(loadingItem);
+  
+  try {
+    const results = [];
+    
+    const [booksRes, tvRes] = await Promise.allSettled([
+      fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5`).then(res => res.json()),
+      fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`).then(res => res.json())
+    ]);
+    
+    if (booksRes.status === 'fulfilled' && booksRes.value.items) {
+      booksRes.value.items.forEach(item => {
+        const info = item.volumeInfo;
+        if (!info) return;
+        
+        const title = info.title || '';
+        const creator = info.authors ? info.authors.join(', ') : 'Unknown Author';
+        let coverUrl = '';
+        if (info.imageLinks) {
+          coverUrl = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail || '';
+          if (coverUrl.startsWith('http://')) {
+            coverUrl = coverUrl.replace('http://', 'https://');
+          }
+        }
+        
+        results.push({
+          title,
+          creator,
+          coverUrl,
+          type: 'book',
+          source: 'Google Books'
+        });
+      });
+    }
+    
+    if (tvRes.status === 'fulfilled' && tvRes.value) {
+      tvRes.value.slice(0, 5).forEach(item => {
+        const show = item.show;
+        if (!show) return;
+        
+        const title = show.name || '';
+        const creator = show.network ? show.network.name : (show.webChannel ? show.webChannel.name : 'Unknown Network');
+        let coverUrl = '';
+        if (show.image) {
+          coverUrl = show.image.medium || show.image.original || '';
+          if (coverUrl.startsWith('http://')) {
+            coverUrl = coverUrl.replace('http://', 'https://');
+          }
+        }
+        
+        results.push({
+          title,
+          creator,
+          coverUrl,
+          type: 'show',
+          source: 'TVmaze'
+        });
+      });
+    }
+    
+    onlineSearchResults.innerHTML = '';
+    
+    if (results.length === 0) {
+      const noResults = document.createElement('div');
+      noResults.style.padding = '1rem';
+      noResults.style.color = 'var(--text-secondary)';
+      noResults.style.fontSize = '0.9rem';
+      noResults.textContent = 'No matching results found online.';
+      onlineSearchResults.appendChild(noResults);
+    } else {
+      results.forEach(res => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'search-result-item';
+        
+        const imgHtml = res.coverUrl 
+          ? `<img src="${escapeHtml(res.coverUrl)}" class="search-result-thumb" alt="cover">`
+          : `<div class="search-result-thumb" style="display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--text-tertiary);"><i class="fa-solid fa-image"></i></div>`;
+          
+        itemEl.innerHTML = `
+          ${imgHtml}
+          <div class="search-result-info">
+            <span class="search-result-title" title="${escapeHtml(res.title)}">${escapeHtml(res.title)}</span>
+            <span class="search-result-meta" title="${escapeHtml(res.creator)}">${escapeHtml(res.creator)}</span>
+          </div>
+          <span class="search-result-badge">${escapeHtml(res.type)}</span>
+        `;
+        
+        itemEl.addEventListener('click', () => {
+          DOM.formTitle.value = res.title;
+          DOM.formCreator.value = res.creator;
+          DOM.formCover.value = res.coverUrl;
+          
+          onlineSearchResults.classList.add('hidden');
+          onlineSearchInput.value = '';
+          
+          showToast(`Auto-filled: "${res.title}"!`, 'success');
+        });
+        
+        onlineSearchResults.appendChild(itemEl);
+      });
+    }
+  } catch (error) {
+    console.error('Online search failed:', error);
+    showToast('Failed to fetch online suggestions', 'error');
+    onlineSearchResults.classList.add('hidden');
+  } finally {
+    onlineSearchBtn.disabled = false;
+    onlineSearchBtn.innerHTML = originalBtnHtml;
+  }
+}
+
 function openModal(item = null, defaultStatus = null, defaultCategory = null) {
   DOM.itemForm.reset();
+  
+  // Reset online search input & hide results
+  const onlineSearchInput = document.getElementById('online-search-input');
+  const onlineSearchResults = document.getElementById('online-search-results');
+  if (onlineSearchInput) onlineSearchInput.value = '';
+  if (onlineSearchResults) onlineSearchResults.classList.add('hidden');
   
   populateCategorySelect();
   populateSuggestions();
