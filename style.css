@@ -663,9 +663,10 @@ body.light-theme .card:hover {
   position: absolute;
   top: 0.75rem;
   left: 0.75rem;
-  right: 0.75rem;
+  right: 3rem; /* Leave room for the bookmark button */
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.35rem;
   align-items: center;
   pointer-events: none;
 }
@@ -2268,6 +2269,54 @@ body.light-theme .sidebar-nav-item.active {
   0% { border-color: var(--color-rose); box-shadow: 0 0 20px var(--color-rose-glow); }
   100% { border-color: var(--border-color); box-shadow: var(--card-shadow); }
 }
+
+/* Card Bookmark Button Overlay */
+.card-bookmark-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  color: var(--color-violet); /* Muted slate gray */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.25s var(--transition-smooth);
+}
+
+.card-bookmark-btn:hover {
+  transform: scale(1.12);
+  color: var(--color-red);
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(255, 69, 58, 0.25);
+  border-color: rgba(255, 69, 58, 0.2);
+}
+
+.card-bookmark-btn.bookmarked {
+  color: #fff;
+  background-color: var(--color-red);
+  border-color: var(--color-red);
+  box-shadow: 0 3px 10px rgba(255, 69, 58, 0.4);
+}
+
+.card-bookmark-btn.bookmarked:hover {
+  background-color: var(--color-red-hover);
+  border-color: var(--color-red-hover);
+  box-shadow: 0 4px 12px rgba(255, 69, 58, 0.5);
+}
+
+/* Theme Adjustments */
+body.light-theme .card-bookmark-btn {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(9, 9, 11, 0.06);
+}
+
 
 
 

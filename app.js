@@ -88,6 +88,7 @@ const DOM = {
   formStartDate: document.getElementById('form-start-date'),
   formEndDate: document.getElementById('form-end-date'),
   formNotes: document.getElementById('form-notes'),
+  formMyList: document.getElementById('form-mylist'),
   formDeleteBtn: document.getElementById('form-delete-btn'),
   formCancelBtn: document.getElementById('form-cancel-btn'),
   formConditionalFields: document.getElementById('status-conditional-fields'),
@@ -906,6 +907,16 @@ function renderSidebarNav() {
     divider.style.letterSpacing = '0.05em';
     divider.textContent = 'Collections';
     DOM.sidebarNav.appendChild(divider);
+
+    // MyList Virtual Collection Link (at the top of Collections)
+    const myListLink = document.createElement('button');
+    myListLink.className = `sidebar-nav-item ${state.currentView === 'mylist' ? 'active' : ''}`;
+    myListLink.innerHTML = `
+      <i class="fa-solid fa-bookmark" style="color: #ea4335;"></i>
+      <span>MyList</span>
+    `;
+    myListLink.addEventListener('click', () => navigate('mylist'));
+    DOM.sidebarNav.appendChild(myListLink);
   }
 
   // 3. Category dynamic links
@@ -1185,13 +1196,24 @@ function renderDashboard() {
 // RENDER COMPONENT: CATEGORY LIBRARY PAGE
 // ==========================================================================
 function renderLibraryPage(categoryName) {
-  DOM.libraryTitle.textContent = `${categoryName} Collection`;
-  DOM.librarySubtitle.textContent = `Manage and track your ${categoryName.toLowerCase()} logs.`;
-  DOM.addBtnText.textContent = `Add ${categoryName.replace(/s$/, '')}`; // Singular e.g. "Add Book"
+  const isMyList = categoryName === 'mylist';
+  
+  if (isMyList) {
+    DOM.libraryTitle.textContent = `My List`;
+    DOM.librarySubtitle.textContent = `Manage and track your bookmarked items.`;
+    DOM.addItemBtn.style.display = 'none'; // Hide add button since bookmarks are added from items
+  } else {
+    DOM.libraryTitle.textContent = `${categoryName} Collection`;
+    DOM.librarySubtitle.textContent = `Manage and track your ${categoryName.toLowerCase()} logs.`;
+    DOM.addItemBtn.style.display = 'inline-flex';
+    DOM.addBtnText.textContent = `Add ${categoryName.replace(/s$/, '')}`;
+  }
 
   // Render Category stats cards
   DOM.categoryStatsSection.innerHTML = '';
-  const categoryItems = state.items.filter(i => i.type === categoryName);
+  const categoryItems = isMyList
+    ? state.items.filter(i => i.myList === true)
+    : state.items.filter(i => i.type === categoryName);
   
   // Total in category card
   const catTotalCard = document.createElement('div');
@@ -1416,8 +1438,10 @@ function renderList() {
 
   // Filter items matching active category + search query + status + language filters
   let filteredItems = state.items.filter(item => {
-    // 1. Match current view category
-    const typeMatch = item.type === activeCategory;
+    // 1. Match current view category or bookmark status
+    const typeMatch = (activeCategory === 'mylist')
+      ? (item.myList === true)
+      : (item.type === activeCategory);
 
     // 2. Search query
     const searchMatch = !state.filters.search || 
@@ -1469,20 +1493,34 @@ function renderList() {
     DOM.emptyState.style.display = 'flex';
     DOM.itemsGrid.style.display = 'none';
     
-    const categoryItems = state.items.filter(item => item.type === activeCategory);
+    const isMyList = activeCategory === 'mylist';
+    const categoryItems = isMyList
+      ? state.items.filter(item => item.myList === true)
+      : state.items.filter(item => item.type === activeCategory);
+      
     if (categoryItems.length === 0) {
       // Entirely empty category
-      DOM.emptyState.innerHTML = `
-        <div class="empty-icon">
-          <i class="fa-regular fa-folder-open"></i>
-        </div>
-        <h3>Your collection is empty</h3>
-        <p>Add your first item to start curating this list!</p>
-        <button id="empty-add-btn" class="btn btn-primary">
-          <i class="fa-solid fa-plus"></i> <span>Add First Item</span>
-        </button>
-      `;
-      document.getElementById('empty-add-btn').addEventListener('click', () => openModal());
+      if (isMyList) {
+        DOM.emptyState.innerHTML = `
+          <div class="empty-icon">
+            <i class="fa-regular fa-bookmark" style="color: var(--color-rose);"></i>
+          </div>
+          <h3>Your MyList is empty</h3>
+          <p>Click the bookmark icon on any item card in your collections to add them here!</p>
+        `;
+      } else {
+        DOM.emptyState.innerHTML = `
+          <div class="empty-icon">
+            <i class="fa-regular fa-folder-open"></i>
+          </div>
+          <h3>Your collection is empty</h3>
+          <p>Add your first item to start curating this list!</p>
+          <button id="empty-add-btn" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> <span>Add First Item</span>
+          </button>
+        `;
+        document.getElementById('empty-add-btn').addEventListener('click', () => openModal());
+      }
     } else {
       // Filtered out empty state
       const singularCategory = activeCategory.replace(/s$/, ''); // e.g. "Book"
@@ -1610,6 +1648,9 @@ function createCard(item) {
   card.innerHTML = `
     <div class="card-cover">
       ${coverHtml}
+      <button class="card-bookmark-btn ${item.myList ? 'bookmarked' : ''}" aria-label="Bookmark item" title="${item.myList ? 'Remove from MyList' : 'Add to MyList'}">
+        <i class="${item.myList ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
+      </button>
       <div class="card-badge-container">
         <span class="badge ${hasTypeClass}" style="${typeBadgeStyle}">${escapeHtml(typeBadgeText)}</span>
         <span class="badge badge-language">${escapeHtml(item.language || 'English')}</span>
@@ -1624,6 +1665,31 @@ function createCard(item) {
       ${datesHtml}
     </div>
   `;
+
+  const bookmarkBtn = card.querySelector('.card-bookmark-btn');
+  if (bookmarkBtn) {
+    bookmarkBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      item.myList = !item.myList;
+      saveItems();
+      
+      const isBookmarked = item.myList;
+      bookmarkBtn.classList.toggle('bookmarked', isBookmarked);
+      bookmarkBtn.setAttribute('title', isBookmarked ? 'Remove from MyList' : 'Add to MyList');
+      const icon = bookmarkBtn.querySelector('i');
+      if (icon) {
+        icon.className = isBookmarked ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark';
+      }
+      
+      showToast(isBookmarked ? 'Added to MyList' : 'Removed from MyList', 'success');
+      
+      if (state.currentView === 'mylist') {
+        renderList();
+      } else if (state.currentView === 'dashboard') {
+        renderDashboard();
+      }
+    });
+  }
 
   return card;
 }
@@ -2090,6 +2156,10 @@ function openModal(item = null, defaultStatus = null, defaultCategory = null) {
     }
   }
   
+  if (DOM.formMyList) {
+    DOM.formMyList.checked = item ? (item.myList || false) : false;
+  }
+  
   updateCreatorLabel();
   toggleModalFields(DOM.formStatus.value);
   DOM.itemModal.classList.add('active');
@@ -2138,6 +2208,7 @@ function handleFormSubmit(e) {
   const startDate = DOM.formStartDate.value;
   const endDate = DOM.formEndDate.value;
   const notes = DOM.formNotes.value.trim();
+  const myList = DOM.formMyList ? DOM.formMyList.checked : false;
   
   let language = DOM.formLanguage.value;
 
@@ -2203,6 +2274,7 @@ function handleFormSubmit(e) {
         startDate: savedStartDate,
         endDate: savedEndDate,
         notes: savedNotes,
+        myList,
         updatedAt: new Date().toISOString()
       };
       showToast('Record updated successfully!', 'success');
@@ -2221,6 +2293,7 @@ function handleFormSubmit(e) {
       startDate: savedStartDate,
       endDate: savedEndDate,
       notes: savedNotes,
+      myList,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
