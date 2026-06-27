@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=16">
+  <link rel="stylesheet" href="style.css?v=24">
 
   <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -339,6 +339,28 @@
           </div>
         </div>
 
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="form-language">Language</label>
+            <div class="select-wrapper">
+              <select id="form-language">
+                <!-- Populated dynamically via JS -->
+              </select>
+              <i class="fa-solid fa-chevron-down select-icon"></i>
+            </div>
+          </div>
+          
+          <div class="form-group flex-1" id="custom-language-group" style="display: none;">
+            <label for="form-custom-language">Custom Language Name</label>
+            <input type="text" id="form-custom-language" placeholder="e.g., French, Spanish" maxlength="15">
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="form-cover">Cover Image URL (Optional)</label>
+            <input type="url" id="form-cover" placeholder="https://example.com/cover.jpg">
+          </div>
+        </div>
+
         <div id="status-conditional-fields">
           <div class="form-row">
             <div class="form-group">
@@ -351,11 +373,6 @@
                 <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1 Star"><i class="fa-solid fa-star"></i></label>
               </div>
             </div>
-
-            <div class="form-group">
-              <label for="form-cover">Cover Image URL (Optional)</label>
-              <input type="url" id="form-cover" placeholder="https://example.com/cover.jpg">
-            </div>
           </div>
 
           <div class="form-row dates-row">
@@ -367,23 +384,6 @@
             <div class="form-group">
               <label for="form-end-date">End Date</label>
               <input type="date" id="form-end-date">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group flex-1">
-              <label for="form-language">Language</label>
-              <div class="select-wrapper">
-                <select id="form-language">
-                  <!-- Populated dynamically via JS -->
-                </select>
-                <i class="fa-solid fa-chevron-down select-icon"></i>
-              </div>
-            </div>
-            
-            <div class="form-group flex-1" id="custom-language-group" style="display: none;">
-              <label for="form-custom-language">Custom Language Name</label>
-              <input type="text" id="form-custom-language" placeholder="e.g., French, Spanish" maxlength="15">
             </div>
           </div>
 
@@ -413,6 +413,6 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Custom Javascript -->
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=24"></script>
 </body>
 </html>

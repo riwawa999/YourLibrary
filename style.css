@@ -1108,6 +1108,33 @@ body.light-theme .modal-container {
   flex-shrink: 0;
 }
 
+.search-result-badge.badge-amazon {
+  background-color: rgba(254, 189, 105, 0.15);
+  color: #e47911;
+}
+
+.search-result-badge.badge-google {
+  background-color: rgba(66, 133, 244, 0.1);
+  color: #4285F4;
+}
+
+.search-result-badge.badge-google-books {
+  background-color: rgba(52, 168, 83, 0.1);
+  color: #34A853;
+}
+
+.search-result-badge.badge-tvmaze {
+  background-color: rgba(236, 72, 153, 0.1);
+  color: var(--color-rose);
+}
+
+.search-result-badge.badge-wikipedia {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+
 /* Modals Actions */
 .form-actions {
   display: flex;

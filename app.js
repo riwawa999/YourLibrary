@@ -807,7 +807,11 @@ function setupEventListeners() {
       const onlineSearchResults = document.getElementById('online-search-results');
       if (!onlineSearchResults) return;
       
-      if (query.length < 2) {
+      // Allow 1-character queries for CJK (Japanese, Korean, Chinese) languages
+      const isCJK = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/.test(query);
+      const minLength = isCJK ? 1 : 2;
+      
+      if (query.length < minLength) {
         onlineSearchResults.classList.add('hidden');
         return;
       }
@@ -1917,6 +1921,12 @@ function populateLanguageSelect(selectedVal = null) {
     saveLanguages();
   }
 
+  // Ensure custom saved language is registered in available languages list
+  if (selectedVal && selectedVal !== '_custom_' && !state.languages.includes(selectedVal)) {
+    state.languages.push(selectedVal);
+    saveLanguages();
+  }
+
   state.languages.forEach(lang => {
     const opt = document.createElement('option');
     opt.value = lang;
@@ -1999,7 +2009,69 @@ function populateSuggestions() {
   });
 }
 
-async function handleOnlineSearch(query) {
+// ==========================================================================
+// JSONP HELPER FOR EXTERNAL API SUITABILITY (CORS BYPASS FOR GOOGLE SUGGEST)
+// ==========================================================================
+function fetchJSONP(url, callbackParamName = 'callback') {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    const callbackName = `yl_jsonp_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+    
+    window[callbackName] = function(data) {
+      resolve(data);
+      cleanup();
+    };
+    
+    function cleanup() {
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+      delete window[callbackName];
+    }
+    
+    // Build URL with callback parameter
+    let finalUrl = url;
+    try {
+      const urlObj = new URL(url);
+      urlObj.searchParams.set(callbackParamName, callbackName);
+      finalUrl = urlObj.toString();
+    } catch (e) {
+      const separator = url.includes('?') ? '&' : '?';
+      finalUrl = `${url}${separator}${callbackParamName}=${callbackName}`;
+    }
+    
+    script.src = finalUrl;
+    
+    script.onerror = () => {
+      reject(new Error(`JSONP request failed for ${url}`));
+      cleanup();
+    };
+    
+    // Set a timeout of 2 seconds to avoid hanging
+    const timeoutId = setTimeout(() => {
+      reject(new Error(`JSONP request timed out for ${url}`));
+      cleanup();
+    }, 2000);
+    
+    // Wrap resolve/reject to clear timeout
+    const originalResolve = resolve;
+    resolve = (value) => {
+      clearTimeout(timeoutId);
+      originalResolve(value);
+    };
+    const originalReject = reject;
+    reject = (reason) => {
+      clearTimeout(timeoutId);
+      originalReject(reason);
+    };
+    
+    document.body.appendChild(script);
+  });
+}
+
+let currentSearchId = 0;
+
+function handleOnlineSearch(query) {
   const onlineSearchResults = document.getElementById('online-search-results');
   if (!onlineSearchResults) return;
   
@@ -2013,108 +2085,376 @@ async function handleOnlineSearch(query) {
   loadingItem.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i> Searching online...';
   onlineSearchResults.appendChild(loadingItem);
   
-  try {
-    const results = [];
+  const searchId = ++currentSearchId;
+  const results = [];
+  const processedTitles = new Set();
+  
+  const diagnostic = {
+    wikipedia: 'pending',
+    books: 'pending',
+    tvmaze: 'pending',
+    google: 'pending'
+  };
+  
+  function renderAccumulatedResults() {
+    if (searchId !== currentSearchId) return;
     
-    const [booksRes, tvRes] = await Promise.allSettled([
-      fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5`).then(res => res.json()),
-      fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`).then(res => res.json())
-    ]);
-    
-    if (booksRes.status === 'fulfilled' && booksRes.value.items) {
-      booksRes.value.items.forEach(item => {
-        const info = item.volumeInfo;
-        if (!info) return;
-        
-        const title = info.title || '';
-        const creator = info.authors ? info.authors.join(', ') : 'Unknown Author';
-        let coverUrl = '';
-        if (info.imageLinks) {
-          coverUrl = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail || '';
-          if (coverUrl.startsWith('http://')) {
-            coverUrl = coverUrl.replace('http://', 'https://');
-          }
-        }
-        
-        results.push({
-          title,
-          creator,
-          coverUrl,
-          type: 'book',
-          source: 'Google Books'
-        });
-      });
-    }
-    
-    if (tvRes.status === 'fulfilled' && tvRes.value) {
-      tvRes.value.slice(0, 5).forEach(item => {
-        const show = item.show;
-        if (!show) return;
-        
-        const title = show.name || '';
-        const creator = show.network ? show.network.name : (show.webChannel ? show.webChannel.name : 'Unknown Network');
-        let coverUrl = '';
-        if (show.image) {
-          coverUrl = show.image.medium || show.image.original || '';
-          if (coverUrl.startsWith('http://')) {
-            coverUrl = coverUrl.replace('http://', 'https://');
-          }
-        }
-        
-        results.push({
-          title,
-          creator,
-          coverUrl,
-          type: 'show',
-          source: 'TVmaze'
-        });
-      });
-    }
-    
-    onlineSearchResults.innerHTML = '';
-    
-    if (results.length === 0) {
+    if (results.length > 0) {
+      onlineSearchResults.innerHTML = '';
+    } else {
+      onlineSearchResults.innerHTML = '';
       const noResults = document.createElement('div');
       noResults.style.padding = '0.75rem 1rem';
       noResults.style.color = 'var(--text-secondary)';
       noResults.style.fontSize = '0.9rem';
-      noResults.textContent = 'No suggestions found online.';
+      
+      const getStatusColor = (status) => {
+        if (status.startsWith('success')) return '#10B981'; // Green
+        if (status === 'pending') return '#F59E0B'; // Orange
+        return '#EF4444'; // Red
+      };
+      
+      noResults.innerHTML = `
+        <div style="font-weight: 500; margin-bottom: 0.5rem;">No suggestions found online.</div>
+        <div style="font-size: 0.8rem; border-top: 1px dashed var(--border-color); padding-top: 0.5rem; margin-top: 0.5rem; color: var(--text-tertiary); text-align: left;">
+          <div style="font-weight: 600; margin-bottom: 0.25rem;">API Status Diagnostics:</div>
+          <div>• Wikipedia Search: <span style="color: ${getStatusColor(diagnostic.wikipedia)}">${escapeHtml(diagnostic.wikipedia)}</span></div>
+          <div>• Google Books API: <span style="color: ${getStatusColor(diagnostic.books)}">${escapeHtml(diagnostic.books)}</span></div>
+          <div>• TVmaze API: <span style="color: ${getStatusColor(diagnostic.tvmaze)}">${escapeHtml(diagnostic.tvmaze)}</span></div>
+          <div>• Google Suggest API: <span style="color: ${getStatusColor(diagnostic.google)}">${escapeHtml(diagnostic.google)}</span></div>
+        </div>
+      `;
       onlineSearchResults.appendChild(noResults);
-    } else {
-      results.forEach(res => {
-        const itemEl = document.createElement('div');
-        itemEl.className = 'search-result-item';
+      return;
+    }
+    
+    results.forEach(res => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'search-result-item';
+      
+      let imgHtml = '';
+      if (res.coverUrl) {
+        imgHtml = `<img src="${escapeHtml(res.coverUrl)}" class="search-result-thumb" alt="cover">`;
+      } else {
+        let iconClass = 'fa-solid fa-image';
+        let bgColor = 'var(--border-color)';
+        let iconColor = 'var(--text-tertiary)';
         
-        const imgHtml = res.coverUrl 
-          ? `<img src="${escapeHtml(res.coverUrl)}" class="search-result-thumb" alt="cover">`
-          : `<div class="search-result-thumb" style="display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--text-tertiary);"><i class="fa-solid fa-image"></i></div>`;
+        if (res.source === 'Google') {
+          iconClass = 'fa-brands fa-google';
+          bgColor = 'rgba(66, 133, 244, 0.1)';
+          iconColor = '#4285F4';
+        } else if (res.source === 'Wikipedia') {
+          iconClass = 'fa-brands fa-wikipedia-w';
+          bgColor = 'rgba(0, 0, 0, 0.05)';
+          iconColor = 'var(--text-primary)';
+        } else if (res.type.toLowerCase() === 'book') {
+          iconClass = 'fa-solid fa-book';
+          bgColor = 'rgba(99, 102, 241, 0.1)';
+          iconColor = 'var(--color-indigo)';
+        } else if (res.type.toLowerCase() === 'show') {
+          iconClass = 'fa-solid fa-tv';
+          bgColor = 'rgba(236, 72, 153, 0.1)';
+          iconColor = 'var(--color-rose)';
+        }
+        
+        imgHtml = `<div class="search-result-thumb" style="display: flex; align-items: center; justify-content: center; font-size: 1.2rem; background-color: ${bgColor}; color: ${iconColor};"><i class="${iconClass}"></i></div>`;
+      }
+      
+      let badgeClass = 'search-result-badge';
+      if (res.source === 'Google') badgeClass += ' badge-google';
+      else if (res.source === 'Google Books') badgeClass += ' badge-google-books';
+      else if (res.source === 'TVmaze') badgeClass += ' badge-tvmaze';
+      else if (res.source === 'Wikipedia') badgeClass += ' badge-wikipedia';
+      
+      itemEl.innerHTML = `
+        ${imgHtml}
+        <div class="search-result-info">
+          <span class="search-result-title" title="${escapeHtml(res.title)}">${escapeHtml(res.title)}</span>
+          <span class="search-result-meta" title="${escapeHtml(res.creator)}">${escapeHtml(res.creator)}</span>
+        </div>
+        <span class="${badgeClass}">${escapeHtml(res.type)}</span>
+      `;
+      
+      itemEl.addEventListener('click', async () => {
+        DOM.formTitle.value = res.title;
+        
+        if (res.source === 'Google' || res.source === 'Wikipedia') {
+          let isShow = false;
+          if (DOM.formType && DOM.formType.value) {
+            const val = DOM.formType.value.toLowerCase();
+            if (val.includes('drama') || val.includes('anime') || val.includes('show') || val.includes('movie')) {
+              isShow = true;
+            }
+          }
           
-        itemEl.innerHTML = `
-          ${imgHtml}
-          <div class="search-result-info">
-            <span class="search-result-title" title="${escapeHtml(res.title)}">${escapeHtml(res.title)}</span>
-            <span class="search-result-meta" title="${escapeHtml(res.creator)}">${escapeHtml(res.creator)}</span>
-          </div>
-          <span class="search-result-badge">${escapeHtml(res.type)}</span>
-        `;
-        
-        itemEl.addEventListener('click', () => {
-          DOM.formTitle.value = res.title;
+          showToast(`Auto-filling: "${res.title}"...`, 'info');
+          
+          try {
+            if (isShow) {
+              const enrichRes = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(res.title)}`).then(r => r.json());
+              if (enrichRes && enrichRes.length > 0) {
+                const show = enrichRes[0].show;
+                if (show) {
+                  if (show.name) DOM.formTitle.value = show.name;
+                  if (!DOM.formCreator.value) {
+                    DOM.formCreator.value = show.network ? show.network.name : (show.webChannel ? show.webChannel.name : 'Unknown Network');
+                  }
+                  if (show.image && !DOM.formCover.value) {
+                    let coverUrl = show.image.medium || show.image.original || '';
+                    if (coverUrl.startsWith('http://')) {
+                      coverUrl = coverUrl.replace('http://', 'https://');
+                    }
+                    DOM.formCover.value = coverUrl;
+                  }
+                  if (show.language && DOM.formLanguage) {
+                    let itemLang = show.language.charAt(0).toUpperCase() + show.language.slice(1).toLowerCase();
+                    updateLanguagesDropdown(itemLang);
+                  }
+                }
+              }
+            } else {
+              const enrichRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(res.title)}&maxResults=1`).then(r => r.json());
+              if (enrichRes && enrichRes.items && enrichRes.items.length > 0) {
+                const info = enrichRes.items[0].volumeInfo;
+                if (info) {
+                  if (info.title) DOM.formTitle.value = info.title;
+                  if (info.authors && !DOM.formCreator.value) {
+                    DOM.formCreator.value = info.authors.join(', ');
+                  }
+                  if (info.imageLinks && !DOM.formCover.value) {
+                    let coverUrl = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail || '';
+                    if (coverUrl.startsWith('http://')) {
+                      coverUrl = coverUrl.replace('http://', 'https://');
+                    }
+                    DOM.formCover.value = coverUrl;
+                  }
+                  if (info.language && DOM.formLanguage) {
+                    let itemLang = 'English';
+                    const rawLang = info.language.toLowerCase();
+                    if (rawLang === 'ja') itemLang = 'Japanese';
+                    else if (rawLang === 'ko') itemLang = 'Korean';
+                    else if (rawLang === 'zh') itemLang = 'Chinese';
+                    else if (rawLang === 'en') itemLang = 'English';
+                    updateLanguagesDropdown(itemLang);
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.error('Failed to enrich metadata in background:', e);
+          }
+        } else {
           DOM.formCreator.value = res.creator;
           DOM.formCover.value = res.coverUrl;
           
-          onlineSearchResults.classList.add('hidden');
-          showToast(`Auto-filled: "${res.title}"!`, 'success');
-        });
+          if (res.language && DOM.formLanguage) {
+            updateLanguagesDropdown(res.language);
+          }
+        }
         
-        onlineSearchResults.appendChild(itemEl);
+        onlineSearchResults.classList.add('hidden');
+        showToast(`Auto-filled: "${DOM.formTitle.value}"!`, 'success');
       });
+      
+      onlineSearchResults.appendChild(itemEl);
+    });
+  }
+
+  function appendNewResults(newItems) {
+    if (searchId !== currentSearchId) return;
+    
+    newItems.forEach(item => {
+      const cleanTitle = item.title.trim().toLowerCase();
+      if (!processedTitles.has(cleanTitle)) {
+        processedTitles.add(cleanTitle);
+        results.push(item);
+      }
+    });
+    
+    renderAccumulatedResults();
+  }
+
+  let selectedLang = '';
+  if (DOM.formLanguage && DOM.formLanguage.value) {
+    selectedLang = DOM.formLanguage.value.toLowerCase();
+  }
+  
+  const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF]/.test(query) || (selectedLang === 'japanese');
+  const hasKorean = /[\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/.test(query) || (selectedLang === 'korean');
+  const hasChinese = /[\u4E00-\u9FAF]/.test(query) || (selectedLang === 'chinese');
+  
+  let wikiLang = 'en';
+  if (hasJapanese) {
+    wikiLang = 'ja';
+  } else if (hasKorean) {
+    wikiLang = 'ko';
+  } else if (hasChinese) {
+    wikiLang = 'zh';
+  } else if (selectedLang === 'french') {
+    wikiLang = 'fr';
+  } else if (selectedLang === 'german') {
+    wikiLang = 'de';
+  } else if (selectedLang === 'spanish') {
+    wikiLang = 'es';
+  }
+  
+  const wikiUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=5&namespace=0&format=json&origin=*`;
+  const googleSuggestUrl = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`;
+
+  // 1. Google Books API
+  fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5`)
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      if (data && data.items) {
+        const bookItems = [];
+        data.items.forEach(item => {
+          const info = item.volumeInfo;
+          if (!info) return;
+          const title = info.title || '';
+          const creator = info.authors ? info.authors.join(', ') : 'Unknown Author';
+          let coverUrl = '';
+          if (info.imageLinks) {
+            coverUrl = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail || '';
+            if (coverUrl.startsWith('http://')) coverUrl = coverUrl.replace('http://', 'https://');
+          }
+          let itemLang = 'English';
+          const rawLang = (info.language || '').toLowerCase();
+          if (rawLang === 'ja') itemLang = 'Japanese';
+          else if (rawLang === 'ko') itemLang = 'Korean';
+          else if (rawLang === 'zh') itemLang = 'Chinese';
+          else if (rawLang === 'en') itemLang = 'English';
+          
+          bookItems.push({ title, creator, coverUrl, language: itemLang, type: 'Book', source: 'Google Books' });
+        });
+        diagnostic.books = `success (${bookItems.length} items)`;
+        appendNewResults(bookItems);
+      } else {
+        diagnostic.books = 'success (0 items)';
+        renderAccumulatedResults();
+      }
+    })
+    .catch(err => {
+      diagnostic.books = `error (${err.message})`;
+      console.warn('Books fetch failed:', err);
+      renderAccumulatedResults();
+    });
+
+  // 2. TVmaze API
+  fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`)
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      if (data && Array.isArray(data)) {
+        const tvItems = [];
+        data.slice(0, 3).forEach(item => {
+          const show = item.show;
+          if (!show) return;
+          const title = show.name || '';
+          const creator = show.network ? show.network.name : (show.webChannel ? show.webChannel.name : 'Unknown Network');
+          let coverUrl = '';
+          if (show.image) {
+            coverUrl = show.image.medium || show.image.original || '';
+            if (coverUrl.startsWith('http://')) coverUrl = coverUrl.replace('http://', 'https://');
+          }
+          let itemLang = show.language || 'English';
+          if (itemLang) itemLang = itemLang.charAt(0).toUpperCase() + itemLang.slice(1).toLowerCase();
+          
+          tvItems.push({ title, creator, coverUrl, language: itemLang, type: 'Show', source: 'TVmaze' });
+        });
+        diagnostic.tvmaze = `success (${tvItems.length} items)`;
+        appendNewResults(tvItems);
+      } else {
+        diagnostic.tvmaze = 'success (0 items)';
+        renderAccumulatedResults();
+      }
+    })
+    .catch(err => {
+      diagnostic.tvmaze = `error (${err.message})`;
+      console.warn('TVmaze fetch failed:', err);
+      renderAccumulatedResults();
+    });
+
+  // 3. Wikipedia API (CORS)
+  fetch(wikiUrl)
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      if (data && Array.isArray(data[1])) {
+        const wikiItems = data[1].map(suggestion => ({
+          title: suggestion,
+          creator: 'Wikipedia Article',
+          coverUrl: '',
+          language: '',
+          type: 'Wiki',
+          source: 'Wikipedia'
+        }));
+        diagnostic.wikipedia = `success (${wikiItems.length} items)`;
+        appendNewResults(wikiItems);
+      } else {
+        diagnostic.wikipedia = 'success (0 items)';
+        renderAccumulatedResults();
+      }
+    })
+    .catch(err => {
+      diagnostic.wikipedia = `error (${err.message})`;
+      console.warn('Wikipedia fetch failed:', err);
+      renderAccumulatedResults();
+    });
+
+  // 4. Google Autocomplete Suggestion API (JSONP)
+  fetchJSONP(googleSuggestUrl, 'callback')
+    .then(data => {
+      if (data && Array.isArray(data[1])) {
+        const googleItems = data[1].slice(0, 5).map(suggestion => ({
+          title: suggestion,
+          creator: 'Google Search Suggestion',
+          coverUrl: '',
+          language: '',
+          type: 'Google',
+          source: 'Google'
+        }));
+        diagnostic.google = `success (${googleItems.length} items)`;
+        appendNewResults(googleItems);
+      } else {
+        diagnostic.google = 'success (0 items)';
+        renderAccumulatedResults();
+      }
+    })
+    .catch(err => {
+      diagnostic.google = `error (${err.message})`;
+      console.warn('Google suggest JSONP failed:', err);
+      renderAccumulatedResults();
+    });
+
+  // In case nothing resolves, set a safety timeout to render "No suggestions found online."
+  setTimeout(() => {
+    if (searchId === currentSearchId && results.length === 0) {
+      renderAccumulatedResults();
     }
-  } catch (error) {
-    console.error('Online search failed:', error);
-    onlineSearchResults.classList.add('hidden');
+  }, 1500);
+}
+
+// Helper to update state and select language on the form
+function updateLanguagesDropdown(itemLang) {
+  const exists = state.languages.some(l => l.toLowerCase() === itemLang.toLowerCase());
+  if (!exists) {
+    state.languages.push(itemLang);
+    saveLanguages();
+    populateLanguageSelect(itemLang);
+  } else {
+    const matchedLang = state.languages.find(l => l.toLowerCase() === itemLang.toLowerCase());
+    DOM.formLanguage.value = matchedLang;
   }
 }
+
 
 function openModal(item = null, defaultStatus = null, defaultCategory = null) {
   DOM.itemForm.reset();
@@ -2265,12 +2605,12 @@ function handleFormSubmit(e) {
 
   // Clear fields if status is planning (Add to My List)
   const isPlanning = status === 'planning';
-  const savedLanguage = isPlanning ? '' : language;
+  const savedLanguage = language;
   const savedRating = isPlanning ? 0 : rating;
-  const savedCoverUrl = isPlanning ? '' : coverUrl;
+  const savedCoverUrl = coverUrl;
   const savedStartDate = isPlanning ? '' : startDate;
   const savedEndDate = isPlanning ? '' : endDate;
-  const savedNotes = isPlanning ? '' : notes;
+  const savedNotes = notes;
   
   if (id) {
     // Edit existing item
