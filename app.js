@@ -2180,6 +2180,10 @@ function handleOnlineSearch(query) {
         DOM.formTitle.value = res.title;
         
         if (res.source === 'Google' || res.source === 'Wikipedia') {
+          // Clear creator and coverUrl first to prepare for fresh background enrichment
+          DOM.formCreator.value = '';
+          DOM.formCover.value = '';
+          
           let isShow = false;
           if (DOM.formType && DOM.formType.value) {
             const val = DOM.formType.value.toLowerCase();
@@ -2197,16 +2201,15 @@ function handleOnlineSearch(query) {
                 const show = enrichRes[0].show;
                 if (show) {
                   if (show.name) DOM.formTitle.value = show.name;
-                  if (!DOM.formCreator.value) {
-                    DOM.formCreator.value = show.network ? show.network.name : (show.webChannel ? show.webChannel.name : 'Unknown Network');
-                  }
-                  if (show.image && !DOM.formCover.value) {
-                    let coverUrl = show.image.medium || show.image.original || '';
+                  DOM.formCreator.value = show.network ? show.network.name : (show.webChannel ? show.webChannel.name : 'Unknown Network');
+                  let coverUrl = '';
+                  if (show.image) {
+                    coverUrl = show.image.medium || show.image.original || '';
                     if (coverUrl.startsWith('http://')) {
                       coverUrl = coverUrl.replace('http://', 'https://');
                     }
-                    DOM.formCover.value = coverUrl;
                   }
+                  DOM.formCover.value = coverUrl;
                   if (show.language && DOM.formLanguage) {
                     let itemLang = show.language.charAt(0).toUpperCase() + show.language.slice(1).toLowerCase();
                     updateLanguagesDropdown(itemLang);
@@ -2223,16 +2226,15 @@ function handleOnlineSearch(query) {
                   const info = enrichRes.items[0].volumeInfo;
                   if (info) {
                     if (info.title) DOM.formTitle.value = info.title;
-                    if (info.authors && !DOM.formCreator.value) {
-                      DOM.formCreator.value = info.authors.join(', ');
-                    }
-                    if (info.imageLinks && !DOM.formCover.value) {
-                      let coverUrl = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail || '';
+                    DOM.formCreator.value = info.authors ? info.authors.join(', ') : 'Unknown Author';
+                    let coverUrl = '';
+                    if (info.imageLinks) {
+                      coverUrl = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail || '';
                       if (coverUrl.startsWith('http://')) {
                         coverUrl = coverUrl.replace('http://', 'https://');
                       }
-                      DOM.formCover.value = coverUrl;
                     }
+                    DOM.formCover.value = coverUrl;
                     if (info.language && DOM.formLanguage) {
                       let itemLang = 'English';
                       const rawLang = info.language.toLowerCase();
@@ -2255,12 +2257,8 @@ function handleOnlineSearch(query) {
                   const openLibRes = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(res.title)}&limit=1`).then(r => r.json());
                   if (openLibRes && openLibRes.docs && openLibRes.docs.length > 0) {
                     const doc = openLibRes.docs[0];
-                    if (doc.author_name && !DOM.formCreator.value) {
-                      DOM.formCreator.value = doc.author_name.join(', ');
-                    }
-                    if (doc.cover_i && !DOM.formCover.value) {
-                      DOM.formCover.value = `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`;
-                    }
+                    DOM.formCreator.value = doc.author_name ? doc.author_name.join(', ') : 'Unknown Author';
+                    DOM.formCover.value = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg` : '';
                     if (doc.language && doc.language.length > 0 && DOM.formLanguage) {
                       let itemLang = 'English';
                       const rawLang = doc.language[0].toLowerCase();
