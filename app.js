@@ -2214,30 +2214,64 @@ function handleOnlineSearch(query) {
                 }
               }
             } else {
-              const enrichRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(res.title)}&maxResults=1`).then(r => r.json());
-              if (enrichRes && enrichRes.items && enrichRes.items.length > 0) {
-                const info = enrichRes.items[0].volumeInfo;
-                if (info) {
-                  if (info.title) DOM.formTitle.value = info.title;
-                  if (info.authors && !DOM.formCreator.value) {
-                    DOM.formCreator.value = info.authors.join(', ');
-                  }
-                  if (info.imageLinks && !DOM.formCover.value) {
-                    let coverUrl = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail || '';
-                    if (coverUrl.startsWith('http://')) {
-                      coverUrl = coverUrl.replace('http://', 'https://');
+              let bookEnriched = false;
+              
+              // 1. Try Google Books first
+              try {
+                const enrichRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(res.title)}&maxResults=1`).then(r => r.json());
+                if (enrichRes && enrichRes.items && enrichRes.items.length > 0) {
+                  const info = enrichRes.items[0].volumeInfo;
+                  if (info) {
+                    if (info.title) DOM.formTitle.value = info.title;
+                    if (info.authors && !DOM.formCreator.value) {
+                      DOM.formCreator.value = info.authors.join(', ');
                     }
-                    DOM.formCover.value = coverUrl;
+                    if (info.imageLinks && !DOM.formCover.value) {
+                      let coverUrl = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail || '';
+                      if (coverUrl.startsWith('http://')) {
+                        coverUrl = coverUrl.replace('http://', 'https://');
+                      }
+                      DOM.formCover.value = coverUrl;
+                    }
+                    if (info.language && DOM.formLanguage) {
+                      let itemLang = 'English';
+                      const rawLang = info.language.toLowerCase();
+                      if (rawLang === 'ja') itemLang = 'Japanese';
+                      else if (rawLang === 'ko') itemLang = 'Korean';
+                      else if (rawLang === 'zh') itemLang = 'Chinese';
+                      else if (rawLang === 'en') itemLang = 'English';
+                      updateLanguagesDropdown(itemLang);
+                    }
+                    bookEnriched = true;
                   }
-                  if (info.language && DOM.formLanguage) {
-                    let itemLang = 'English';
-                    const rawLang = info.language.toLowerCase();
-                    if (rawLang === 'ja') itemLang = 'Japanese';
-                    else if (rawLang === 'ko') itemLang = 'Korean';
-                    else if (rawLang === 'zh') itemLang = 'Chinese';
-                    else if (rawLang === 'en') itemLang = 'English';
-                    updateLanguagesDropdown(itemLang);
+                }
+              } catch (e) {
+                console.warn('Google Books background enrichment failed:', e);
+              }
+              
+              // 2. If Google Books failed or returned no results, try Open Library as fallback
+              if (!bookEnriched) {
+                try {
+                  const openLibRes = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(res.title)}&limit=1`).then(r => r.json());
+                  if (openLibRes && openLibRes.docs && openLibRes.docs.length > 0) {
+                    const doc = openLibRes.docs[0];
+                    if (doc.author_name && !DOM.formCreator.value) {
+                      DOM.formCreator.value = doc.author_name.join(', ');
+                    }
+                    if (doc.cover_i && !DOM.formCover.value) {
+                      DOM.formCover.value = `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`;
+                    }
+                    if (doc.language && doc.language.length > 0 && DOM.formLanguage) {
+                      let itemLang = 'English';
+                      const rawLang = doc.language[0].toLowerCase();
+                      if (rawLang === 'jpn' || rawLang === 'ja') itemLang = 'Japanese';
+                      else if (rawLang === 'kor' || rawLang === 'ko') itemLang = 'Korean';
+                      else if (rawLang === 'chi' || rawLang === 'zh') itemLang = 'Chinese';
+                      updateLanguagesDropdown(itemLang);
+                    }
                   }
+                } catch (err) {
+                  console.warn('Open Library background enrichment failed:', err);
                 }
               }
             }
