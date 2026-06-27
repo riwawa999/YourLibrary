@@ -2343,9 +2343,13 @@ function handleOnlineSearch(query) {
     selectedLang = DOM.formLanguage.value.toLowerCase();
   }
   
-  const queryIsJapanese = /[\u3040-\u309F\u30A0-\u30FF]/.test(query) || (query.length > 0 && /[\u4E00-\u9FAF]/.test(query) && selectedLang === 'japanese');
-  const queryIsKorean = /[\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/.test(query) || (selectedLang === 'korean');
-  const queryIsChinese = /[\u4E00-\u9FAF]/.test(query) && !queryIsJapanese && !queryIsKorean || (selectedLang === 'chinese');
+  const hasKanji = /[\u4E00-\u9FAF]/.test(query);
+  const hasKana = /[\u3040-\u309F\u30A0-\u30FF]/.test(query);
+  const hasHangul = /[\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/.test(query);
+  
+  const queryIsJapanese = hasKana || (hasKanji && selectedLang !== 'chinese' && selectedLang !== 'korean');
+  const queryIsKorean = hasHangul || (selectedLang === 'korean');
+  const queryIsChinese = (hasKanji && selectedLang === 'chinese') || (hasKanji && !hasKana && selectedLang === 'chinese');
   const queryIsEnglish = !queryIsJapanese && !queryIsKorean && !queryIsChinese;
 
   function filterByLanguage(res) {
