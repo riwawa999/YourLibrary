@@ -783,7 +783,20 @@ function setupEventListeners() {
   });
 
   // Category change within modal form
-  DOM.formType.addEventListener('change', updateCreatorLabel);
+  DOM.formType.addEventListener('change', () => {
+    updateCreatorLabel();
+    
+    // Also re-trigger search suggestions if user has entered a valid title query
+    if (DOM.formTitle) {
+      const query = DOM.formTitle.value.trim();
+      const isCJK = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/.test(query);
+      const minLength = isCJK ? 1 : 2;
+      
+      if (query.length >= minLength) {
+        handleOnlineSearch(query);
+      }
+    }
+  });
 
   // Language selection change within modal form (triggers custom input display)
   DOM.formLanguage.addEventListener('change', handleFormLanguageChange);
@@ -2333,10 +2346,48 @@ function handleOnlineSearch(query) {
     return true;
   }
 
+  const category = DOM.formType ? DOM.formType.value.toLowerCase() : '';
+  const isBookOrManga = category.includes('book') || category.includes('manga') || category.includes('novel');
+  const isShowOrAnime = category.includes('drama') || category.includes('anime') || category.includes('show') || category.includes('movie');
+
+  function filterByCategory(res) {
+    if (isBookOrManga) {
+      // Discard TV shows
+      if (res.source === 'TVmaze' || res.type === 'Show') return false;
+      
+      // Discard Wikipedia articles with show/movie qualifiers
+      if (res.source === 'Wikipedia') {
+        const title = res.title;
+        if (title.includes(' (映画)') || title.includes(' (ドラマ)') || title.includes(' (アニメ)') || title.includes(' (ゲーム)') || title.includes(' (テレビ番組)')) {
+          return false;
+        }
+      }
+      return true;
+    }
+    
+    if (isShowOrAnime) {
+      // Discard Books
+      if (res.source === 'Google Books' || res.type === 'Book') return false;
+      
+      // Discard Wikipedia articles with book/manga qualifiers
+      if (res.source === 'Wikipedia') {
+        const title = res.title;
+        if (title.includes(' (小説)') || title.includes(' (漫画)') || title.includes(' (新書)') || title.includes(' (文庫)') || title.includes(' (絵本)') || title.includes(' (書籍)')) {
+          return false;
+        }
+      }
+      return true;
+    }
+    
+    return true;
+  }
+
   function appendNewResults(newItems) {
     if (searchId !== currentSearchId) return;
     
-    const filteredItems = newItems.filter(filterByLanguage);
+    const filteredItems = newItems
+      .filter(filterByLanguage)
+      .filter(filterByCategory);
     
     filteredItems.forEach(item => {
       const cleanTitle = item.title.trim().toLowerCase();
