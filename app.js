@@ -2347,35 +2347,48 @@ function handleOnlineSearch(query) {
   const hasKana = /[\u3040-\u309F\u30A0-\u30FF]/.test(query);
   const hasHangul = /[\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/.test(query);
   
-  const queryIsJapanese = hasKana || (hasKanji && selectedLang !== 'chinese' && selectedLang !== 'korean');
-  const queryIsKorean = hasHangul || (selectedLang === 'korean');
-  const queryIsChinese = (hasKanji && selectedLang === 'chinese') || (hasKanji && !hasKana && selectedLang === 'chinese');
-  const queryIsEnglish = !queryIsJapanese && !queryIsKorean && !queryIsChinese;
+  // Set of active languages to search and display
+  const activeLangs = new Set();
+  
+  if (hasKana) {
+    activeLangs.add('Japanese');
+  }
+  if (hasHangul) {
+    activeLangs.add('Korean');
+  }
+  if (hasKanji) {
+    // Kanji-only could be Japanese or Chinese.
+    // If they explicitly selected Japanese or Chinese, honor that.
+    // Otherwise, search and display BOTH Japanese and Chinese!
+    if (selectedLang === 'chinese') {
+      activeLangs.add('Chinese');
+    } else if (selectedLang === 'japanese') {
+      activeLangs.add('Japanese');
+    } else {
+      activeLangs.add('Japanese');
+      activeLangs.add('Chinese');
+    }
+  }
+  
+  // Default fallback if no East Asian script is detected
+  if (activeLangs.size === 0) {
+    activeLangs.add('English');
+    if (selectedLang === 'japanese') activeLangs.add('Japanese');
+    else if (selectedLang === 'korean') activeLangs.add('Korean');
+    else if (selectedLang === 'chinese') activeLangs.add('Chinese');
+    else if (selectedLang === 'french') activeLangs.add('French');
+    else if (selectedLang === 'german') activeLangs.add('German');
+    else if (selectedLang === 'spanish') activeLangs.add('Spanish');
+  }
 
   function filterByLanguage(res) {
-    if (queryIsJapanese) {
-      if (res.source === 'Google Books' || res.source === 'TVmaze') {
-        return res.language === 'Japanese';
-      }
-      return /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(res.title);
+    if (res.language) {
+      return activeLangs.has(res.language);
     }
     
-    if (queryIsKorean) {
-      if (res.source === 'Google Books' || res.source === 'TVmaze') {
-        return res.language === 'Korean';
-      }
-      return /[\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/.test(res.title);
-    }
-    
-    if (queryIsChinese) {
-      if (res.source === 'Google Books' || res.source === 'TVmaze') {
-        return res.language === 'Chinese';
-      }
-      return /[\u4E00-\u9FAF]/.test(res.title);
-    }
-    
-    if (queryIsEnglish) {
-      const hasCJK = /[\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7A3\u4E00-\u9FAF]/.test(res.title);
+    // For suggestions without metadata (Google Autocomplete):
+    const hasCJK = /[\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7A3\u4E00-\u9FAF]/.test(res.title);
+    if (activeLangs.has('English') && activeLangs.size === 1) {
       return !hasCJK;
     }
     
@@ -2388,10 +2401,7 @@ function handleOnlineSearch(query) {
 
   function filterByCategory(res) {
     if (isBookOrManga) {
-      // Discard TV shows
       if (res.source === 'TVmaze' || res.type === 'Show') return false;
-      
-      // Discard Wikipedia articles with show/movie qualifiers
       if (res.source === 'Wikipedia') {
         const title = res.title;
         if (title.includes(' (映画)') || title.includes(' (ドラマ)') || title.includes(' (アニメ)') || title.includes(' (ゲーム)') || title.includes(' (テレビ番組)')) {
@@ -2402,10 +2412,7 @@ function handleOnlineSearch(query) {
     }
     
     if (isShowOrAnime) {
-      // Discard Books
       if (res.source === 'Google Books' || res.type === 'Book') return false;
-      
-      // Discard Wikipedia articles with book/manga qualifiers
       if (res.source === 'Wikipedia') {
         const title = res.title;
         if (title.includes(' (小説)') || title.includes(' (漫画)') || title.includes(' (新書)') || title.includes(' (文庫)') || title.includes(' (絵本)') || title.includes(' (書籍)')) {
@@ -2436,22 +2443,6 @@ function handleOnlineSearch(query) {
     renderAccumulatedResults();
   }
 
-  let wikiLang = 'en';
-  if (queryIsJapanese) {
-    wikiLang = 'ja';
-  } else if (queryIsKorean) {
-    wikiLang = 'ko';
-  } else if (queryIsChinese) {
-    wikiLang = 'zh';
-  } else if (selectedLang === 'french') {
-    wikiLang = 'fr';
-  } else if (selectedLang === 'german') {
-    wikiLang = 'de';
-  } else if (selectedLang === 'spanish') {
-    wikiLang = 'es';
-  }
-  
-  const wikiUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=5&namespace=0&format=json&origin=*`;
   const googleSuggestUrl = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`;
 
   // 1. Google Books API
@@ -2479,6 +2470,9 @@ function handleOnlineSearch(query) {
           else if (rawLang === 'ko') itemLang = 'Korean';
           else if (rawLang === 'zh') itemLang = 'Chinese';
           else if (rawLang === 'en') itemLang = 'English';
+          else if (rawLang === 'fr') itemLang = 'French';
+          else if (rawLang === 'de') itemLang = 'German';
+          else if (rawLang === 'es') itemLang = 'Spanish';
           
           bookItems.push({ title, creator, coverUrl, language: itemLang, type: 'Book', source: 'Google Books' });
         });
@@ -2532,44 +2526,59 @@ function handleOnlineSearch(query) {
       renderAccumulatedResults();
     });
 
-  // 3. Wikipedia API (CORS)
-  fetch(wikiUrl)
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      if (data && Array.isArray(data[1])) {
-        const wikiItems = data[1].map(suggestion => ({
-          title: suggestion,
-          creator: 'Wikipedia Article',
-          coverUrl: '',
-          language: wikiLang === 'ja' ? 'Japanese' : (wikiLang === 'ko' ? 'Korean' : (wikiLang === 'zh' ? 'Chinese' : 'English')),
-          type: 'Wiki',
-          source: 'Wikipedia'
-        }));
-        diagnostic.wikipedia = `success (${wikiItems.length} items)`;
-        appendNewResults(wikiItems);
-      } else {
-        diagnostic.wikipedia = 'success (0 items)';
+  // 3. Wikipedia API (CORS) - Fetch all active languages in parallel
+  activeLangs.forEach(lang => {
+    let wikiSub = 'en';
+    if (lang === 'Japanese') wikiSub = 'ja';
+    else if (lang === 'Korean') wikiSub = 'ko';
+    else if (lang === 'Chinese') wikiSub = 'zh';
+    else if (lang === 'French') wikiSub = 'fr';
+    else if (lang === 'German') wikiSub = 'de';
+    else if (lang === 'Spanish') wikiSub = 'es';
+    
+    const wikiUrl = `https://${wikiSub}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=5&namespace=0&format=json&origin=*`;
+    
+    fetch(wikiUrl)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        if (data && Array.isArray(data[1])) {
+          const wikiItems = data[1].map(suggestion => ({
+            title: suggestion,
+            creator: 'Wikipedia Article',
+            coverUrl: '',
+            language: lang,
+            type: 'Wiki',
+            source: 'Wikipedia'
+          }));
+          diagnostic.wikipedia = `success (${wikiItems.length} items)`;
+          appendNewResults(wikiItems);
+        } else {
+          diagnostic.wikipedia = 'success (0 items)';
+          renderAccumulatedResults();
+        }
+      })
+      .catch(err => {
+        diagnostic.wikipedia = `error (${err.message})`;
+        console.warn(`Wikipedia (${wikiSub}) fetch failed:`, err);
         renderAccumulatedResults();
-      }
-    })
-    .catch(err => {
-      diagnostic.wikipedia = `error (${err.message})`;
-      console.warn('Wikipedia fetch failed:', err);
-      renderAccumulatedResults();
-    });
+      });
+  });
 
   // 4. Google Autocomplete Suggestion API (JSONP)
   fetchJSONP(googleSuggestUrl, 'callback')
     .then(data => {
       if (data && Array.isArray(data[1])) {
+        // Inherit first active language or default to English
+        const autoLang = Array.from(activeLangs)[0] || 'English';
+        
         const googleItems = data[1].slice(0, 5).map(suggestion => ({
           title: suggestion,
           creator: 'Google Search Suggestion',
           coverUrl: '',
-          language: queryIsJapanese ? 'Japanese' : (queryIsKorean ? 'Korean' : (queryIsChinese ? 'Chinese' : 'English')),
+          language: autoLang,
           type: 'Google',
           source: 'Google'
         }));
