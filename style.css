@@ -1134,6 +1134,41 @@ body.light-theme .modal-container {
   border: 1px solid var(--border-color);
 }
 
+.search-result-lang-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  text-transform: capitalize;
+  display: inline-block;
+  line-height: 1.2;
+}
+
+.search-result-lang-badge.lang-japanese {
+  background-color: rgba(220, 38, 38, 0.08); /* Soft red for Japan */
+  color: #DC2626;
+  border: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.search-result-lang-badge.lang-korean {
+  background-color: rgba(37, 99, 235, 0.08); /* Soft blue for Korea */
+  color: #2563EB;
+  border: 1px solid rgba(37, 99, 235, 0.15);
+}
+
+.search-result-lang-badge.lang-chinese {
+  background-color: rgba(217, 119, 6, 0.08); /* Soft orange/gold for China */
+  color: #D97706;
+  border: 1px solid rgba(217, 119, 6, 0.15);
+}
+
+.search-result-lang-badge.lang-english {
+  background-color: rgba(79, 70, 229, 0.08); /* Soft indigo for English */
+  color: #4F46E5;
+  border: 1px solid rgba(79, 70, 229, 0.15);
+}
+
+
 
 /* Modals Actions */
 .form-actions {

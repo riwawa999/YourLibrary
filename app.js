@@ -2180,13 +2180,20 @@ function handleOnlineSearch(query) {
       else if (res.source === 'TVmaze') badgeClass += ' badge-tvmaze';
       else if (res.source === 'Wikipedia') badgeClass += ' badge-wikipedia';
       
+      const langBadgeHtml = res.language 
+        ? `<span class="search-result-lang-badge lang-${res.language.toLowerCase()}">${escapeHtml(res.language)}</span>` 
+        : '';
+        
       itemEl.innerHTML = `
         ${imgHtml}
         <div class="search-result-info">
           <span class="search-result-title" title="${escapeHtml(res.title)}">${escapeHtml(res.title)}</span>
           <span class="search-result-meta" title="${escapeHtml(res.creator)}">${escapeHtml(res.creator)}</span>
         </div>
-        <span class="${badgeClass}">${escapeHtml(res.type)}</span>
+        <div class="search-result-badges-container" style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem; margin-left: auto; flex-shrink: 0;">
+          <span class="${badgeClass}">${escapeHtml(res.type)}</span>
+          ${langBadgeHtml}
+        </div>
       `;
       
       itemEl.addEventListener('click', async () => {
@@ -2533,7 +2540,7 @@ function handleOnlineSearch(query) {
           title: suggestion,
           creator: 'Wikipedia Article',
           coverUrl: '',
-          language: '',
+          language: wikiLang === 'ja' ? 'Japanese' : (wikiLang === 'ko' ? 'Korean' : (wikiLang === 'zh' ? 'Chinese' : 'English')),
           type: 'Wiki',
           source: 'Wikipedia'
         }));
@@ -2558,7 +2565,7 @@ function handleOnlineSearch(query) {
           title: suggestion,
           creator: 'Google Search Suggestion',
           coverUrl: '',
-          language: '',
+          language: queryIsJapanese ? 'Japanese' : (queryIsKorean ? 'Korean' : (queryIsChinese ? 'Chinese' : 'English')),
           type: 'Google',
           source: 'Google'
         }));
