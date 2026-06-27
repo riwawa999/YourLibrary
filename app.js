@@ -2295,10 +2295,52 @@ function handleOnlineSearch(query) {
     });
   }
 
+  let selectedLang = '';
+  if (DOM.formLanguage && DOM.formLanguage.value) {
+    selectedLang = DOM.formLanguage.value.toLowerCase();
+  }
+  
+  const queryIsJapanese = /[\u3040-\u309F\u30A0-\u30FF]/.test(query) || (query.length > 0 && /[\u4E00-\u9FAF]/.test(query) && selectedLang === 'japanese');
+  const queryIsKorean = /[\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/.test(query) || (selectedLang === 'korean');
+  const queryIsChinese = /[\u4E00-\u9FAF]/.test(query) && !queryIsJapanese && !queryIsKorean || (selectedLang === 'chinese');
+  const queryIsEnglish = !queryIsJapanese && !queryIsKorean && !queryIsChinese;
+
+  function filterByLanguage(res) {
+    if (queryIsJapanese) {
+      if (res.source === 'Google Books' || res.source === 'TVmaze') {
+        return res.language === 'Japanese';
+      }
+      return /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(res.title);
+    }
+    
+    if (queryIsKorean) {
+      if (res.source === 'Google Books' || res.source === 'TVmaze') {
+        return res.language === 'Korean';
+      }
+      return /[\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/.test(res.title);
+    }
+    
+    if (queryIsChinese) {
+      if (res.source === 'Google Books' || res.source === 'TVmaze') {
+        return res.language === 'Chinese';
+      }
+      return /[\u4E00-\u9FAF]/.test(res.title);
+    }
+    
+    if (queryIsEnglish) {
+      const hasCJK = /[\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7A3\u4E00-\u9FAF]/.test(res.title);
+      return !hasCJK;
+    }
+    
+    return true;
+  }
+
   function appendNewResults(newItems) {
     if (searchId !== currentSearchId) return;
     
-    newItems.forEach(item => {
+    const filteredItems = newItems.filter(filterByLanguage);
+    
+    filteredItems.forEach(item => {
       const cleanTitle = item.title.trim().toLowerCase();
       if (!processedTitles.has(cleanTitle)) {
         processedTitles.add(cleanTitle);
@@ -2309,21 +2351,12 @@ function handleOnlineSearch(query) {
     renderAccumulatedResults();
   }
 
-  let selectedLang = '';
-  if (DOM.formLanguage && DOM.formLanguage.value) {
-    selectedLang = DOM.formLanguage.value.toLowerCase();
-  }
-  
-  const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF]/.test(query) || (selectedLang === 'japanese');
-  const hasKorean = /[\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/.test(query) || (selectedLang === 'korean');
-  const hasChinese = /[\u4E00-\u9FAF]/.test(query) || (selectedLang === 'chinese');
-  
   let wikiLang = 'en';
-  if (hasJapanese) {
+  if (queryIsJapanese) {
     wikiLang = 'ja';
-  } else if (hasKorean) {
+  } else if (queryIsKorean) {
     wikiLang = 'ko';
-  } else if (hasChinese) {
+  } else if (queryIsChinese) {
     wikiLang = 'zh';
   } else if (selectedLang === 'french') {
     wikiLang = 'fr';
