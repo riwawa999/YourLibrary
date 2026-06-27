@@ -2214,7 +2214,32 @@ function handleOnlineSearch(query) {
                 const show = enrichRes[0].show;
                 if (show) {
                   if (show.name) DOM.formTitle.value = show.name;
-                  DOM.formCreator.value = show.network ? show.network.name : (show.webChannel ? show.webChannel.name : 'Unknown Network');
+                  
+                  // Default fallback is network/channel name
+                  let creatorName = show.network ? show.network.name : (show.webChannel ? show.webChannel.name : 'Unknown Network');
+                  
+                  // Fetch crew to find Creators / Directors / Executive Producers
+                  try {
+                    const crewRes = await fetch(`https://api.tvmaze.com/shows/${show.id}/crew`).then(r => r.json());
+                    if (crewRes && Array.isArray(crewRes) && crewRes.length > 0) {
+                      const creators = crewRes.filter(c => c.type === 'Creator').map(c => c.person.name);
+                      const directors = crewRes.filter(c => c.type === 'Director').map(c => c.person.name);
+                      const execProducers = crewRes.filter(c => c.type === 'Executive Producer').map(c => c.person.name);
+                      
+                      if (creators.length > 0) {
+                        creatorName = creators.join(', ');
+                      } else if (directors.length > 0) {
+                        creatorName = directors.join(', ');
+                      } else if (execProducers.length > 0) {
+                        creatorName = execProducers.join(', ');
+                      }
+                    }
+                  } catch (crewErr) {
+                    console.warn('Failed to fetch crew info from TVmaze:', crewErr);
+                  }
+                  
+                  DOM.formCreator.value = creatorName;
+                  
                   let coverUrl = '';
                   if (show.image) {
                     coverUrl = show.image.medium || show.image.original || '';
